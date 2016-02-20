@@ -1,0 +1,21 @@
+.pisa_bg {
+    fill: black;
+}
+.pisa_fg {
+    stroke: white;
+    stroke-width: 2px;
+    font-size: 14pt;
+    fill: none;
+}
+text.pisa_fg {
+    font-size: 14pt;
+    stroke-width: 1px;
+    fill: white;
+}
+.label {
+    font-size: 18px;
+}
+#raxpol_cursor_loc {
+    stroke: white;
+    fill: white;
+}

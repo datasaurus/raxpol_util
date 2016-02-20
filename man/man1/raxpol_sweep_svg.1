@@ -1,0 +1,141 @@
+.\" 
+.\" Copyright (c) 2015, Gordon D. Carrie. All rights reserved.
+.\" 
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 
+.\"     * Redistributions of source code must retain the above copyright
+.\"     notice, this list of conditions and the following disclaimer.
+.\"     * Redistributions in binary form must reproduce the above copyright
+.\"     notice, this list of conditions and the following disclaimer in the
+.\"     documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\" A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\" HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+.\" TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+.\" PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+.\" LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+.\" NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+.\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\" 
+.\" Please address questions and feedback to dev0@trekix.net
+.\"
+.Pp
+.Dd $Mdocdate$
+.Dt raxpol_sweep_svg 1
+.Os UNIX
+.Sh NAME
+.Nm raxpol_sweep_svg
+.Nd Make a SVG file for a RaXPol sweeps
+.Sh SYNOPSIS
+.Nm raxpol_mk_vols
+\>
+.Pa vol_list
+.Nm raxpol_sweep_svg
+.Op Fl n
+.Op Fl p
+.Op Fl b Ar bounds
+.Op Fl w Ar pixels
+.Op Fl z Ar pixels
+.Op Fl l Ar pixels
+.Op Fl m Ar margins
+.Op Fl c Ar color_file
+.Op Fl r Ar root_path
+.Op Fl o Ar output_path
+.Ar data_type
+.Ar sweep_angle
+.Ar vol_id
+\< vol_list
+.Sh DESCRIPTION
+This application makes a Scalable Vector Graphics (SVG) image for data
+type
+.Ar data_type
+for the sweep angle nearest
+.Ar sweep_angle
+in RaXPol volume
+.Ar vol_id .
+It reads volume and sweep information from
+.Nm raxpol_mk_vols
+output, which must be given in standard input.
+.Pp
+The options are as follows:
+.Bl -tag -width DS
+.It Fl n
+Noclobber. If the output file exists, print its name and exit.
+.It Fl p
+Print name of default output .svg file and exit. Do not create the .svg file.
+.It Fl b Ar x_min=value,x_max=value,y_min=value,y_max=value
+Limits of plot in plot coordinates (not pixels) for given
+scan mode. Does not have to give all values. For values not
+given, default is used. Units are meters.
+.It Fl w Ar width
+Document width, pixels
+.It Fl z Ar height
+Font size, pixels
+.It Fl l Ar width
+Width of color cells in legend, pixels
+.It Fl m Ar top=pixels,left=pixels
+Margins around plot area. Right and bottom margins are determined from font
+and legend sizes.
+.It Fl c Ar color_file
+Color table file, which must contain output from
+.Nm raster_clrs ,
+or the
+.Nm raster_clrs
+format described in
+.Xr raster_clrs 1 .
+If absent,
+.Nm raxpol_sweep_svg
+will look for a file based on
+.Ar data_type .
+For example, if
+.Ar data_type
+is DBZ,
+.Nm raxpol_sweep_svg
+looks for a file named
+.Pa DBZ.clrs
+in the directory given by the
+.Ev RAXPOL_COLOR_DIR
+environment variable, if set. If not, it looks for
+.Pa DBZ.clrs
+in installation directory
+.Pa /usr/local/share/raxpol/colors .
+At installation,
+.Nm make
+might have replaced
+.Pa /usr/local
+with the value given as
+.Va PREFIX .
+.It Fl r Ar root_path
+root directory, prepended to relative paths in standard input. Use if the
+RaXPol moment file arguments to
+.Nm raxpol_mk_vols
+were relative to a different directory from current working directory.
+.It Fl o Ar output_path
+Name of output file, overrides default. If "-", send SVG to standard output.
+.El
+.Sh ENVIRONMENT
+.Bl -tag -width RAXPOL_GEOG_PROJX
+.It Ev RAXPOL_COLOR_DIR
+specifies directory with color files. See discussion of
+.Fl c
+option.
+.It Ev RAXPOL_GEOG_PROJ
+specifies geographic projection in format readable to
+.Nm geog
+.Ar lonlat_to_xy
+command. See
+.Xr geog 1.
+.Sh SEE ALSO
+.Xr raxpol_mk_vols 1
+.Xr raxpol_swps_svg 1
+.Xr raster_clrs 1
+.Xr pisa 1
+.Sh AUTHOR
+.An Gordon Carrie
+.Ad dev0@trekix.net

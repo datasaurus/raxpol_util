@@ -1,0 +1,131 @@
+#!/bin/sh
+#
+#	Identify volumes and sweeps from ray headers. See raxpol_mk_vols (1).
+
+# findswps parameters. See findswps (1).
+resoln=${RAXPOL_RESOLN:-"0.01"}
+min_span=${RAXPOL_MIN_SPAN:-"50.0,20.0"}
+max_dev=${RAXPOL_MAX_DEV:-"0.30"}
+ray_hdrs_dir=${RAXPOL_RAY_HDRS_DIR:-""}
+
+swp_angl_resoln=${RAXPOL_SWP_ANGL_RESOLN:-"0.20"}
+jump=${RAXPOL_JUMP:-"12.0"}
+
+# Parse command line
+while getopts :r:n:x:h:y:j: opt
+do
+    case "$opt"
+    in
+	r)
+	    resoln=$OPTARG
+	    ;;
+	n)
+	    min_span=$OPTARG
+	    ;;
+	x)
+	    max_dev=$OPTARG
+	    ;;
+	h)
+	    ray_hdrs_dir="$OPTARG"
+	    ;;
+	y)
+	    swp_angl_resoln=$OPTARG
+	    ;;
+	j)
+	    jump=$OPTARG
+	    ;;
+	\?)
+	    echo "$0: unknown option $OPTARG" 1>&2
+	    exit 1
+	    ;;
+    esac
+done
+shift `expr $OPTIND - 1`
+if [ $# -lt 1 ]
+then
+    {
+	printf -- "Usage: $0 -r resoln -n min_span -x max_dev -h ray_hdrs_dir "
+	printf -- "-s sweep_hdrs_dir file [file ...]\n"
+    } 1>&2
+    exit 1
+fi
+testread() {
+    f="$1"
+    if ! raxpol_file_hdr $f > /dev/null 2>&1
+    then
+	RAXPOL_OLD_FMT=1
+	export RAXPOL_OLD_FMT
+	if ! raxpol_file_hdr $f > /dev/null 2>&1
+	then
+	    echo "$0: could not read $f" 1>&2
+	    exit 1
+	fi
+    fi
+}
+printf "Config resoln=%s min_span=%s max_dev=%s swp_angl_resoln=%s jump=%s\n" \
+	$resoln $min_span $max_dev $swp_angl_resoln $jump
+for f in "$@"
+do
+    {
+	echo File $f
+	testread $f
+	raxpol_ray_hdrs -a $f \
+	| awk '{
+	    az = $10;
+	    el = $12;
+	    printf "Ray %s %s ", az, el;
+	    print;
+	}'
+    } | findswps -r $resoln -n $min_span -x $max_dev \
+    | awk '
+	$1 == "Sweep" {
+	    swp = $0;
+	    getline;			# Read first ray
+	    split($6, ymd, "/");
+	    yr = ymd[1];
+	    mon = ymd[2];
+	    day = ymd[3];
+	    split($7, hms, ":");
+	    hr = hms[1];
+	    min = hms[2];
+	    sec = hms[3];
+	    printf("%s Time %04d/%02d/%02d %02d:%02d:%02.0f\n", \
+		    swp, yr, mon, day, hr, min, sec);
+	    print;			# Print first ray
+	    next;
+	}
+	{
+	    print;
+	}
+    ' | findvols.awk -v swp_angl_resoln=$swp_angl_resoln -v jump=$jump \
+    | awk '
+	$1 == "Vol" {
+	    vol_info = $0;
+	    sub(/ScanMode/, "", vol_info);
+	    printf("%s ", vol_info);
+	    getline;			# Read info for first sweep
+	    split($9, ymd, "/");
+	    yr = ymd[1];
+	    mon = ymd[2];
+	    day = ymd[3];
+	    split($10, hms, ":");
+	    hr = hms[1];
+	    min = hms[2];
+	    sec = hms[3];
+	    printf("%04d%02d%02d-%02d%02d%02.0f\n", yr, mon, day, hr, min, sec);
+	}
+	$1 == "Sweep" {
+	    printf("%s ", $0);
+	    getline;			# Read info for first ray
+	    ray0 = $5;
+	    getline;			# Read info for last ray
+	    ray1 = $5;
+	    printf("Rays %d -> %d\n", ray0, ray1);
+	    next;
+	}
+	{
+	    print;
+	}
+    '
+done
+

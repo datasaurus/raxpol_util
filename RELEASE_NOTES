@@ -1,0 +1,946 @@
+Wed Feb 11 16:19:57 CST 2015
+raxpol_ray_hdrs also prints file offset to ray
+
+20150316161719
+Re-wrote findswps.
+Ray header printout includes date as well as time
+
+20150428170551
+findswps --
+min_span argument can take separate values for PPI and RHI.
+Cleaned out dead and deprecated code from findswps.c.
+Reformatted output of findswps command for easier searching.
+--
+raxpol_lib --
+Added blocks for 2011 and older raxpol files.
+Reformatted output of header print functions for better compatibility with awk.
+Added ability to read SPP Sum Power rays.
+Various bug fixes. More checking for NULL pointers in functions.
+--
+raxpol_file_hdr --
+prints headers for first and last ray.
+Accepts -o option indicating old format files.
+--
+raxpol_ray_hdr --
+Added options.  -a requests abbreviated output.  -h sets heading, overriding
+GPS heading in ray headers.  -o input file is "old" (2011) format. Start and
+end ray times desired are now specified with -s and -e options, respectively.
+--
+raxpol_to_sweep --
+Accepts separate minimum spans for PPI and RHI.
+Is more organinized.
+--
+tm_calc library has a resolution parameter
+raxpol_to_dorade.awk checked in. Makes partial DORADE sweep right now.
+raxpol_ray_hdrs utility accepts a time range.
+
+20150507150001
+Added RaXPol_Noise function.
+Split RaXPol_ZH and RaXPol_ZV into RaXPol_ZH, RaXPol_ZV, RaXPol_DBZH,
+and RaXPol_DBZV.
+raxpol_file_hdr utility prints offsets to first and last rays.
+raxpol_lib --
+Created separate raxpol_z and raxpol_dbz functions instead of doing everything
+in raxpol_z.
+--
+raxpol_dat --
+utility only calculates and prints requested fields.
+raxpol_dat computes moments locally instead of using functions in raxpol_lib,
+which are now redundant. RaXPol moments have too many interdependencies for
+modular calculations in the current set up.
+--
+
+20150925120929
+strlcpy.h --
+    Disabled global strlcpy before local declaration. This prevents interference
+    from Apple's version of strlcpy in their stupid "standard" library.
+--
+raxpol.h, raxpol_lib.h, raxpol_dat.c --
+    Encapsulated the various server modes and recorded moments into RaXPol_Data
+    struct.  Consolidated the input and output functions into a smaller set that
+    interfaces with the struct. Rewrote raxpol_dat.c with the new interface.
+--
+
+20151005153302
+findswps.c --
+    Added more tests to still_rhi and still_ppi functions.
+    Capitalized file scope variables.
+--
+raxpol.h, raxpol_lib.c, raxpol_dat.c --
+    Functions that convert input fields to output are now methods of RaXPol_Data
+    struct instead of global funtions.
+--
+
+20151005170735
+findswps.c --
+    Some global variables are now local.
+--
+
+20151006200255
+raxpol_lib.c --
+    Filled in stub functions for single pulse pair and single pulse pair sum
+    power output fields.
+--
+
+20151013183955
+Checking in sweep_img.c, raxpol_swp_idx, raxpol_swp_dat, and raxpol_swp_dat.awk.
+Removed raxpol_to_sweep, replace with raxpol_swp_idx.
+Checking in geog_proj.c geog_proj.h get_colors.c get_colors.h.
+raxpol_lib.c --
+    Abbreviated ray header output now includes truck heading.
+--
+raxpol_dat.c --
+    Application no longer prints file header. Printing ray headers is optional.
+    Moment names are printed only if there is more than one moment.
+--
+findswps.c --
+    First sweep is index 0, not 1;
+--
+
+20151014134133
+geog_proj.c --
+    GeogProjLonLatToXY and GeogProjXYToLonLat set return arguments to NAN on
+    failure.
+--
+sweep_img.c --
+    Added functions to compute gate corners for filled sweeps.
+--
+
+20151014190433
+findswps, raxpol_swp_idx --
+    Now accepts -y option to specify scan type sought, "ppi", "rhi", or "all".
+    raxpol_swp_idx uses it.
+--
+
+20151102113355
+Checking in geog, tm_calc, pisa, color_legend, raxpol_swps_svg, sweep_limits
+applications.
+Checking in str library utility.
+raxpol_ray_hdrs --
+    Added ray count option
+--
+findswps --
+    -y option is now -i. This allows the option to pass in
+    raxpol_swps_svg, where -y option specifies a style sheet.
+--
+raxpol_swp_dat, raxpol_swp_dat.awk, raxpol_swp_idx --
+    Removed. Not needed.
+--
+sweep_img --
+    Keys end with ":", like pisa.
+--
+raxpol_lib.c --
+    Abbreviated ray header output includes Julian ray time in addition to
+    calendar ray time.
+--
+
+20151102171827
+raxpol_ray_hrs --
+    Just takes ray start index and count, or just prints all rays.
+    Time search will be a separate application.
+--
+raxpol_lib.c --
+    Shortened abbreviated header output.
+--
+
+20151103180433
+raxpol_dat --
+    Replaced offset argument with index to first ray.
+--
+sweep_img --
+    (bug fix) Corrected order in which gate corners are printed.
+    (bug fix) Failure to convert degrees to radians.
+--
+raxpol_swps_svg --
+    Command line options can specify separate bounds for PPI and RHI.
+    Adjusted for new abbreviated header output.
+--
+
+20151104170343
+unix_defs.h --
+    c99 is optional.
+--
+Makefile, raxpol_script_links.svg --
+    Path to share directory is substituted into svg script links file.
+--
+
+20151104182919
+Checking in share directory and contents.
+raxpol_swps_svg --
+    Color file is now a color directory. Application searches this directory
+    for a file with name based on the data type.
+    Several variables can now be set either with environment variable or
+    command line option.
+--
+
+20151105134619
+raxpol_dat --
+    Always prints moment names, even for only one moment.
+--
+raxpol_swps_svg --
+    Clarified documentation. Strip out moment name from raxpol_dat output.
+    sweep_img does not need it.
+--
+
+20151105195015
+raxpol_dat --
+    Now requires starting ray index and ray count. Output consists of moment name
+    followed by data for ray count rays, then next moment name followed by data
+    for ray count rays, and so on.
+--
+raxpol_swps_svg --
+    Reads the revised raxpol_dat output. Makes sweeps for several moments in
+    one block. Desired performance boost failed to show.
+--
+
+20151105195715
+raxpol_dat, raxpol_swps_svg --
+    Restoring from 20151105134619 release. It is simpler and performs as well
+    as 20151105195015 version, which is tabled.
+--
+
+20151106180639
+raxpol_swps_svg --
+    Now has a man page. Clipped source documentation.
+--
+findvols.awk --
+    Checking in. Divide findswps output into volumes.
+--
+antpath.vim --
+    Checking in. Makes SVG file of antenna path while raxpol_ray_hdrs -a output
+    in vim.
+--
+
+20151110142426
+findvols.awk --
+    Added check for direction change in sweep angle progression. If direction
+    changes, start a new volume.
+--
+
+20151111173807
+raxpol_swp_svg --
+    Checking in. This script makes an image for one sweep, given first ray and
+    ray count.
+--
+raxpol_swps_svg --
+    Transfered code to raxpol_swp_svg. raxpol_swps_svg identifies sweeps and
+    calls raxpol_swp_svg to draw them.
+--
+findswps.c --
+    Hoisted some loop independent code out of a loop.
+--
+findvols.awk --
+    Changed output format. Output now gives sweep index in file and in volume.
+--
+
+20151112150936
+findswps.c --
+    (Bug fix) Type-o in output.
+--
+raxpol_swp_svg.1, pisa.1 --
+    Checking in man pages.
+--
+
+20151113141935
+raxpol_swp_svg --
+    Added -n option for no output, just print name of output file.
+--
+raxpol_mk_vols --
+    Checking in. Make "volume files", actually indeces of sweeps for volumes.
+--
+raster_clrs, strlcpy.c, strlcpy.h --
+    Removed.
+--
+
+20151113182005
+raxpol_swp_svg --
+    Renamed. New name is raxpol_svg.
+--
+raxpol_sweep.cgi, raxpol_sweep.cgi.conf, raxpol_buttons.svg --
+    Checking in. Scripts and configuration for web site.
+--
+raxpol_mk_vols --
+    Output now goes to one file for all volumes instead of individual volume
+    files.
+--
+
+20151118163010
+raxpol_swp_svg --
+    Added some descriptor elements.
+--
+raxpol_sweep.cgi, raxpol_sweep.cgi.conf --
+    Rewrote.
+--
+findswps.1 --
+    Correction. y is now i.
+--
+findvols --
+    Now uses command line options instead of a configuration file.
+--
+
+20151120182523
+raxpol_swp_svg --
+    prefix, suffix, and css arguments just concatenate arguments. This assumes
+    arguments do not contain white space.
+    Clarified source documentation.
+--
+Makefile, raxpol_script_links.svg --
+    No more substitution for SHARE_DIR variable. Link form depends on whether
+    display uses browser or server, and server configuration.
+--
+raxpol_svg.js --
+    Changed elements and objects from Sigmet structure to RaXPol.
+--
+raxpol_sweep.cgi, raxpol_sweep.conf --
+    Added more descriptor elements, which are sent in a prefix file to put them
+    closer to descriptors from raxpol_svg.
+    More error checking.
+    Web site paths are hard coded in raxpol_sweep.cgi script. data path is
+    inferred from file path in QUERY_STRING, which must be absolute.
+    (bug fix) In awk, vols[i++] means vols["i++"].
+--
+
+20151120183519
+findvols.awk --
+    Require that ppi scans increase elevation from sweep to sweep.
+--
+
+20151123172948
+raxpol_svg --
+    If -n option in use, do not look for color directory.
+--
+raxpol_sweep.cgi --
+    Values from swp_params file in case directory override sweep parameters in
+    configuration file.
+--
+
+20151123180114
+raxpol_sweep.cgi, raxpol_sweep.cgi.conf --
+    Most path names are now set in raxpol_sweep.cgi instead of in conf file.
+--
+
+
+20151125114809
+share/raxpol_buttons.svg --
+    (bug fix) sigmet_cursor_loc should be raxpol_cursor_loc
+--
+share/raxpol_svg.js --
+    (bug fix) sigmet_cursor_loc should be raxpol_cursor_loc
+    Added azimuth and distance from radar to cursor location display.
+--
+src/sweep_img.c --
+    (bug fix) Input gives distance to start of each gate. Failed to assign
+    distance value to end of last gate.
+    (bug fix) Assumed degrees instead of radians.
+--
+
+20151125135639
+cgi-bin/raxpol_sweep.cgi conf/raxpol_sweep.cgi.conf --
+    CGI script now inserts local bin directory into PATH. Configuration file no
+    longer sets it.
+--
+cgi-bin/raxpol_sweep.cgi share/raxpol_script_links.www.svg
+    Created raxpol_script_links document fragment with paths set for web site.
+--
+share/raxpol_script_links.local.svg src/Makefile --
+    Checking in. This version of raxpol_script_links provides links intelligible
+    to a local browser, as opposed to a web server. It contains a reference
+    to SHARE_DIR. Makefile replaces SHARE_DIR with a make variable which points
+    to the destination for pisa.js and raxpol_svg.js.
+--
+
+20151127194314
+share/raxpol_svg.js --
+    Event handlers that require a web server with CGI are disabled unless
+    CGI_Script variable is set.
+--
+cgi-bin/raxpol_sweep.cgi --
+    Added sweep index files. They are made at the same time as volume index.
+--
+src/findswps.c --
+    Rays can go outside allowed deviation, as long as az/el mean and el/az
+    variance satisfy sweep criteria.
+    Rearranged output to include az/el limits for rhi/ppi.
+--
+src/Makefile --
+    Added install-www target. Adds cgi-bin and conf directories.
+--
+libexec/start-httpd --
+    Checking in. Start a web server.
+--
+src/raxpol_to_dorade.awk --
+    Deleted. Will retrieve later, if need be.
+--
+src/raxpol_idx_html --
+    Checking in. Make an index.html for a case.
+--
+src/raxpol_mk_vols --
+    -s option to save sweep headers
+--
+src/raxpol_swps_svg man/man1/raxpol_swps_svg.1 --
+    Deleted. Not used.
+--
+src/findvols.awk --
+    No longer linked to findvols.
+    Added swp_angl_resoln variable, which determines whether a sweep angle
+    repeats the first sweep angle of a volume.
+--
+cgi-bin/raxpol_sweep.cgi conf/raxpol_sweep.cgi.conf --
+    Renamed to raxpol_sweep.cgi.conf raxpol_sweep.cgi.conf.dflt
+    raxpol_sweep.cgi sources the default file, then sources
+    raxpol_sweep.cgi.conf if it exists.
+--
+cgi-bin/raxpol_sweep.cgi img/YYMMDD/conf/raxpol_sweep.cgi.conf --
+    Case configuration is also called raxpol_sweep.cgi.conf, not swp_params.
+--
+share/moment_list --
+    Checking in. Handy list of RaXPol moments.
+--
+src/raxpol_seek_ray.c --
+    Checking in, although unlikely to keep.
+--
+libdata --
+    Directory removed. Using share.
+--
+
+20151202180949
+cgi-bin/raxpol_sweep.cgi raxpol_mk_vols --
+    Changed order of configuration loads.
+    No longer make sweep header files.
+--
+src/raxpol_lib.c --
+    (bug fix) Reset noise at start of each ray.
+    (bug fix) Set rhohv to NAN if reflectivity is below threshold.
+--
+src/get_colors.c --
+    Added calls to strtof because OpenBSD C89 scanf does not parse nan.
+--
+src/findswps.c src/findvols.awk src/raxpol_svg share/raxpol_svg.js
+src/sweep_img.c --
+    Changed rhi to RHI, ppi to PPI in text patterns.
+--
+src/raxpol_idx_html --
+    Same algorithm, different order.
+--
+libexec/start-httpd --
+    Branches for different platforms.
+--
+man/man3/str.3 --
+    Checking in.
+--
+src/raster_clrs man/man1/raster_clrs.1 -
+    Checking in. Make color tables.
+--
+DBMHC.clrs DBMVC.clrs DBZ1.clrs SNRHC.clrs SNRVC.clrs STD.clrs VEL.clrs --
+    Checking in more colors files.
+--
+
+20151204161713
+libexec/start-httpd --
+    Make case insensitive search of uname output
+    Remove process id file before starting.
+--
+src/raxpol_idx_html --
+    case argument can be MMDDYY or data/MMDDYY.
+--
+src/findswps.c --
+    (bug fix) When discarding rays at start of sweep, advance start of sweep,
+    not some random pointer.
+--
+src/pisa.js --
+    Set label precision to five significant digits.
+--
+share/raxpol_svg.js raxpol_sweep.cgi --
+    Removed scan mode from CGI request.
+--
+
+20151204182715
+sigmet_svg.js --
+    Eliminated some spurious global variables - PrevImg, PrevImgK, ... The are
+    in the SwpElems object.
+--
+sigmet_svg.js raxpol_sweep.cgi --
+    CGI pattern is now swp_angl_req, meaning requested sweep angle, as opposed
+    to actual angle for the sweep.
+--
+raxpol_mk_vols --
+    Now make index pages for all cases.
+--
+
+20151209151412
+start-httpd --
+    (bug fix) Use pwd when trap call is created, not executed.
+--
+raxpol_sweep_cgi --
+    (bug fix) Insert requested sweep angle into CGI response. Do not store it in
+    the image file, where it is instantly obsolete.
+--
+sweep_img.c --
+    Calculate corners for each gate individually, instead of putting them into
+    arrays. Calculating arrays of corners for arrays of gates might be faster,
+    but is messy. Optimize later, maybe with hash tables.
+--
+
+20151209171254
+raxpol_svg.js --
+    Cursor display includes direction and distance from radar to cursor for
+    RHI as well as PPI.
+--
+findswps.c --
+    Check for proper antenna motion at end of sweep by looking after last ray,
+    not before it.
+--
+
+20151210175615
+raxpol_svg.js --
+    Removed distance and direction from radar from cursor display. Output was
+    wrong. Fix it later.
+--
+findswps.c --
+    (bug fix) Replaced r->next with next_after(r). This ensures additional rays
+    are loaded when needed.
+    Ray lines start with "Ray"
+--
+findvols.awk --
+    Prints "Ray" lines
+--
+raxpol_mk_vols --
+    Prints "Ray" lines
+--
+
+20151211182728
+Makefile --
+    Add geog application to the list of installed executables.
+--
+sweep_img.c raxpol_svg --
+    Requires Earth radius.
+    Replaced ray limits with ray widths.
+    Changed "ray_az_centers" to "az", "ray_el_centers" to "el".
+--
+raxpol_svg --
+    Added rearth descriptor element - provides Earth radius.
+--
+raxpol_svg.js --
+    (bug fix) Update Cartesian variables before converting window coordinates
+    to and from Cartesian.
+    Repaired and restored cursor display with direction and distance from radar
+    to cursor for RHI.
+--
+
+20151216152330
+raxpol_svg.js raxpol_sweep.cgi raxpol_idx_html --
+    Replaced single sweep angle request with separate requests for PPI and RHI.
+--
+
+20151216170415
+pisa.js raxpol_svg.js --
+    Deleted some superfluous functions.
+--
+
+20160105170006
+raxpol_sweep.cgi raxpol_svg.js raxpol_idx_html --
+    Request sends boundaries for PPI and RHI scans. raxpol_sweep.cgi does not
+    use them, but passes them back to browser. raxpol_svg.js uses the
+    information to keep plot scale and location the same.
+    raxpol_idx_html prints default boundaries into initial addresses.
+--
+start_httpd --
+    Added FreeBSD to BSD branch.
+--
+
+20160106121818
+pisa.js --
+    Access Cartesian boundaries with get and set functions instead of closure
+    variables.
+--
+
+20160106182245
+pisa.js --
+    Removed KeepMargins variable.
+    Moved some closure variables into the functions that use them.
+    Added CreateSVGElement function.
+--
+raxpol_svg.js --
+    Removed KeepMargins variable.
+--
+
+20160107163557
+pisa.js --
+    PlotDrag and EndPlotDrag functions are nested in StartPlotDrag.
+    TickLen is a constant set at load time instead of a function.
+    Removed superfluous XPad closure variable.
+    (bug fix) Call StartPlotDrag only if mouse is down on plot. Mouse down
+	events elsewhere in document should not initiate drag.
+--
+raxpol_svg.js --
+    Consolidated event handler set up at bottom of load function.
+    Eliminated some closure variables.
+--
+
+20160107170356
+pisa.js raxpol_svg.js --
+    Moved pisa code into raxpol_svg.js.
+    Deleted separate pisa.js file.
+--
+
+20160108153210
+raxpol_svg.js --
+    No longer reload when switching scan modes.
+--
+raxpol_svg.js raxpol_sweep.cgi --
+    Save plot boundaries in browser state instead of sending back and forth
+    through CGI scripts.
+--
+
+20160108182000
+raxpol_sweep.awk --
+    Checking in.
+--
+raxpol_sweep.cgi raxpol_sweep.awk --
+    Moved embedded text awk script that searches for sweep into a separate file.
+--
+
+20160112151352
+start-httpd --
+    (bug fix) quote the glob argument to -c. cgi-bin directory now has more than
+    one file.
+--
+raxpol_sweep.cgi raxpol_sweep.awk raxpol_svg.js raxpol_idx_html --
+    RaXPol volume is now identified as raxpol_path,vol_id where vol_id is
+    YYYYMMDD-HHMMSS of first ray.
+--
+
+20160112184128
+raxpol_svg raxpol_svg.1 --
+    SVG code goes to standard output.
+--
+raxpol_sweep.awk --
+    (bug fix) Print the actual sweep angle, not the requested.
+--
+raxpol_sweep.cgi --
+    Create file name locally for raxpol_svg output.
+    Replace raxpol_svg sweep angle with raxpol_sweep.awk result.
+--
+
+20160115152530
+raxpol_mk_vols raxpol_sweep.cgi raxpol_idx_html --
+    raxpol_mk_vols now reads ray headers from standard input and prints sweep
+    and ray information. RaXPol file name must be provided separately.
+--
+
+20160119180057
+findswps.c findswps.1 --
+    Output first and last rays, not all of them.
+--
+raxpol_mk_vols --
+    Takes RaXPol file list in arguments, again. Gets ray headers from the files -
+    slower but simpler.
+--
+raxpol_sweep.awk --
+    Adjusted for new findswps output.
+--
+raxpol_idx_html raxpol_sweep.cgi --
+    Moved volume finding code to raxpol_mk_vols.
+--
+
+20160120182259
+raxpol_sweep.awk Makefile --
+    Moved from cgi-bin to src.
+--
+raxpol_sweep.cgi --
+    No longer checks for configuration. If configuration changes, run
+    raxpol_idx_html again.
+--
+raxpol_sweep.cgi raxpol_svg.js raxpol_idx_html --
+    Removed RaXPol file path from QUERY_STRING. Volume list provides it.
+    Case identifier, MMDDYY, tells which volume list to use.
+--
+
+20160120192114
+raxpol_svg.js raxpol_sweep.cgi raxpol_sweep.awk --
+    Left and right arrow buttons get previous and next volume of any scan type.
+    Shift to stay with scan type is no longer supported.
+--
+raxpol_mk_vols --
+    Includes findswps and findvols parameters in output.
+--
+
+20160122165439
+get_colors.c --
+    Removed nan input workaround for OpenBSD.
+--
+raxpol_sweep.awk --
+    (Bug fix) Moved some inconsistently repeated code out of a block sequence.
+    Changed near_swp to nr_swp.
+    Added nr_swp_dirn to output.
+--
+raxpol_swp_svg --
+    Checking in. Script makes SVG document for a sweep.
+--
+
+20160122183525
+raxpol_svg.js --
+    Adjusted CenterCaptions. Captions now anchor to "middle".
+--
+raxpol_swp_svg Makefile --
+    make replaces SHARE_DIR with path to shared directory. If present, certain
+    files there, or links to them, are concatenated into the SVG output.
+--
+
+20160125165944
+raxpol_sweep.cgi raxpol_svg.js raxpol_idx_html raxpol_sweep.awk raxpol_swp_svg
+--
+    Image requests now only specify sweep angle, not sweep angles for PPI and
+    RHI.
+    raxpol_sweep.awk adds scan type to next_vol and prev_vol values.
+    This tells raxpol_svg.js which angle to request.
+--
+raxpol_svg --
+    Set caption text anchor to "middle"
+--
+
+20160126125110
+raxpol_swp_svg --
+    Added -o, -n, -r options.
+    -p option now prints default name for output file.
+    -c specifies color file, not color directory.
+    Prefix and suffix files are no longer used. XML comments mark sections of
+    SVG output. awk can add content at appropriate section boundaries.
+--
+raxpol_swp_svg raxpol_script_links.local.svg raxpol_script_links.www.svg --
+    raxpol_swp_svg makes script links in line.
+    Deleting raxpol_script_links.local.svg raxpol_script_links.www.svg --
+--
+raxpol_sweep.cgi raxpol_buttons.svg --
+    raxpol_buttons.svg is now embedded in raxpol_sweep.cgi.
+    Deleting raxpol_buttons.svg.
+--
+raxpol_svg.js --
+    Added SwpAngl variable, stores default PPI and RHI sweep angles.
+--
+raxpol_sweep.awk --
+    (bug fix) Created separate variable names for previous, current, and next
+    scan modes. Calling them all scan_mode was ambiguous.
+--
+Makefile --
+    Added LOCAL_SHARE_DIR macro, which holds paths to scripts as seen by web
+    browser or web server. SHARE_DIR macro is a system path.
+--
+
+20160126171253
+raxpol_svg raxpol_svg.1 --
+    Deleted. raxpol_swp_svg replaces raxpol_svg.
+--
+raxpol_swp_svg raxpol_sweep_svg --
+    Renamed raxpol_swp_svg to raxpol_sweep_svg, for consistency with other file
+    names.
+--
+raxpol_sweep_svg.1 --
+    Checking in man page.
+--
+
+
+20160127131251
+raxpol_svg.js raxpol_sweep.js --
+    Renamed raxpol_svg.js to raxpol_sweep.js, for consistency with other file
+    names.
+--
+raxpol_svg.css raxpol_sweep.css --
+    Renamed raxpol_svg.css to raxpol_sweep.css, for consistency with other file
+    names.
+--
+raxpol_sweep.js --
+    Azimuth in cursor location display is now always > 0.0.
+--
+raxpol_sweep_svg raxpol_sweep.cgi Makefile --
+    Eliminated LOCAL_SHARE_DIR macro. raxpol_sweep_svg just uses SHARE_DIR.
+    raxpol_sweep.cgi replaces system paths with local server root paths
+    in its response.
+    (bug fix) Use default Earth radius from "geog rearth", not 4/3. 4/3 rule is
+    for heights only.
+--
+raxpol_idx_html --
+    (bug fix) Volume identifier is not an integer.
+--
+sweep_img.c --
+    Earth radius is optional.
+    (bug fix) Use 4/3 rule for heights only.
+--
+geog_lib.c --
+    Optional GEOG_REARTH variable sets Earth radius.
+--
+tm_cal_app.c --
+    Deleted. Not used.
+--
+
+20160127134148
+raxpol_sweep_svg geog_app.c --
+    Removing geog application. It only set Earth radius in raxpol_sweep_svg.
+    raxpol_sweep_svg now sets GEOG_REARTH variable, which then propagates
+    to geog_lib calls in applications.
+--
+geog_lib.c --
+    Set Earth radius from environment variable once only.
+--
+
+20160127144208
+raxpol_sweep_svg --
+    (bug fix) When installing new sweep, set Cartesian boundaries and view box
+    from new document if not set locally for the scan type. This prevents use
+    of PPI bounds when going from PPI to RHI, and vice versa for the first time.
+--
+
+20160127185935
+raxpol_sweep.js raxpol_sweep.awk --
+    Up and down arrows move to next and previous sweeps.
+--
+raxpol_sweep_svg --
+    (bug fix) GEOG_REARTH, not rearth in script.
+--
+
+20160128192046
+findswps.c findswps.1 --
+    Input lines must start with "Ray "
+    Lines without ray info go to standard output.
+--
+findvols.awk --
+    Print everything, so additional lines from findswps pass through.
+    If sweep processing produces desired output, skip omni print with a call
+    to "next".
+--
+raxpol_mk_vols --
+    No longer prints "Ray" lines for first and last ray. It appends ray
+    information to the sweep line.
+--
+raxpol_idx_html raxpol_sweep.awk --
+    Adjust for new raxpol_mk_vols output.
+--
+
+20160202163430
+raxpol_file_hdr.c --
+    Option for legacy format is '-l', as for other applications.
+--
+raxpol_dat.c raxpol_file_hdr.c raxpol_ray_hdrs.c
+raxpol_mk_vols raxpol_sweep_svg --
+    RAXPOL_OLD_FMT environment variable
+--
+
+20160202172115
+raxpol_dat.c --
+    (bug fix) Erroneous error message
+--
+raxpol_sweep.js --
+    One function removes all of the event listeners. Call it when starting update
+    so elements do not move around while others are still being added. Another
+    function adds them all. Call it when done updating.
+
+    Drag background is still inconsistent. Sometimes is moves the plot. Other
+    times user must put cursor on a radar gate.
+--
+
+20160202175251
+raxpol_sweep.awk raxpol_sweep_svg --
+    Store findswps and findvols parameters in a descriptor in the SVG file.
+--
+raxpol_sweep.js --
+    (bug fix) Replaced "this" with "window" when adding and removing event
+    handlers, since "this" seems to have different meanings in load and
+    update contexts. There is probably an elegant way to handle this.
+--
+
+20160205172344
+raxpol_lib.c raxpol.h --
+    Added functions to compute input fields to output moments for dual pulse
+    pair (dpp).
+--
+
+20160205191348
+README --
+    Checking in.
+--
+raxpol_lib.c --
+    Introduced some variables to reduce clutter.
+--
+
+20160211121530
+raxpol.h raxpol_lib.c --
+    Made functions local to raxpol_lib.c static. Deleted unused functions.
+--
+
+20160211154424
+raxpol_dat.1 raxpol_file_hdr.1 raxpol_mk_vols.1 --
+    Checking in man pages.
+    Removed redundant source documentation.
+--
+raxpol_dat.c --
+    Native memory encoding no longer prints "ray _index_"
+--
+raxpol_file_hdr --
+    Print number of rays without "=" for consistency.
+--
+
+20160211185657
+raxpol_sweep.cgi raxpol_sweep_svg.1 --
+    Clarified documentation
+--
+start-httpd --
+    Prints name of web site if start succeeds.
+--
+
+20160212185826
+raxpol_file_hdr.c raxpol_ray_hdrs.c raxpol_dat.c --
+    Added -V option, prints version information.
+--
+raxpol_sweep_svg --
+    Look for color files in SHARE_DIR/colors instead of local directory.
+--
+
+20160216162116
+raxpol_sweep.cgi raxpol_sweep.js start-httpd raxpol_idx_html --
+    Data directory is no longer local "data". It can be anywhere, and can have
+    case directories, or all moment files in one directory.
+--
+start-httpd --
+    Now searches html files for port number.
+--
+
+20160217135311
+raxpol_sweep.js --
+    (bug fix) added pisa_x_title and pisa_y_title to list of elements to update
+    (bug fix) initialize PlotBnds with members for RHI.
+--
+start-httpd --
+    Now understands hosts besides localhost.
+--
+raxpol_lib.c --
+    (bug fix) Mismatch in allocation sizes. Asked for space for float, needed
+    space for float _Complex.
+--
+VEL.clrs --
+    Zero velocity is white.
+--
+
+20160217152954
+start-httpd --
+    (bug fix) Put $log in the exit script when defining it. Otherwise, awk tries
+    to read "", which becomes standard input.
+--
+
+20160217155214
+README --
+    Minor edit.
+--
+
+20160217163751
+start-httpd --
+    (bug fix) Create separate branch for MacOS X.
+--
+raxpol_idx_html --
+    Minor change in output.
+--
+README --
+    Minor edit.
+--
+
+__NOW__
+

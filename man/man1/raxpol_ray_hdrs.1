@@ -1,0 +1,120 @@
+.\" 
+.\" Copyright (c) 2015, Gordon D. Carrie. All rights reserved.
+.\" 
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 
+.\"     * Redistributions of source code must retain the above copyright
+.\"     notice, this list of conditions and the following disclaimer.
+.\"     * Redistributions in binary form must reproduce the above copyright
+.\"     notice, this list of conditions and the following disclaimer in the
+.\"     documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\" A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\" HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+.\" TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+.\" PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+.\" LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+.\" NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+.\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\" 
+.\" Please address questions and feedback to dev0@trekix.net
+.\"
+.Pp
+.Dd $Mdocdate$
+.Dt RAXPOL_RAY_HDRS 1
+.Os UNIX
+.Sh NAME
+.Nm raxpol_ray_hdrs
+.Nd Print RaXPol ray headers
+.Sh SYNOPSIS
+.Nm raxpol_ray_hdrs
+.Op Fl V
+.Op Fl a
+.Op Fl l
+.Op Fl h Ar angle
+.Op Fl s Ar start
+.Op Fl c Ar count
+.Ar raxpol_file
+.Sh DESCRIPTION
+.Nm raxpol_ray_hdrs
+prints ray headers from RaXPol moment file
+.Ar raxpol_file .
+.Sh OPTIONS
+.Bl -tag -width angle
+.It Fl V
+Print version information and exit.
+.It Fl a
+requests abbreviated output.
+.It Fl l
+indicates
+.Ar raxpol_file
+uses legacy (2011) format.
+.It Fl h Ar angle
+sets radar heading to
+.Ar angle ,
+overriding GPS heading, which might impose spurious variations.
+.It Fl s Ar start
+specifies index of first ray to print. First ray in file has index 0.
+.It Fl c Ar count
+specifies number of rays to print.
+.El
+.Sh OUTPUT FORMAT
+Default output starts with the file header, but not the first and last ray
+headers, as described in
+.Xr raxpol_file_hdr 1 .
+Then for each ray, output has form:
+.Bd -literal -offset indent
+\fBray\fP \fIindex\fP
+\fBtimestamp_seconds\fP \fIinteger\fP
+\fBtimestamp_useconds\fP \fIinteger\fP
+\fBtimestamp_cal\fP \fIYYYY/MM/DD HH:MM:SS.SS\fP
+\fBradar_temperatures\fP \fItemp temp temp temp\fP
+\fBinclinometer_roll\fP \fInumber\fP
+\fBinclinometer_pitch\fP \fInumber\fP
+\fBfuel_sensor\fP \fInumber\fP
+\fBcpu_temperature\fP \fInumber\fP
+\fBpedestal_scan_type\fP \fIcode\fP \fI(name)\fP
+\fBtx_power\fP \fInumber\fP
+\fBosc_lock\fP \fInumber\fP
+\fBaz\fP \fIangle_degrees\fP
+\fBel\fP \fIangle_degrees\fP
+\fBaz_vel\fP \fInumber\fP
+\fBelev_vel\fP \fInumber\fP
+\fBaz_current\fP \fInumber\fP
+\fBelev_current\fP \fInumber\fP
+\fBvolume_count\fP \fIinteger\fP
+\fBsweep_count\fP \fIinteger\fP
+\fBflags\fP \fInumber\fP
+\fBlat_ref\fP \fBN\fPor\fBS\fP
+\fBlat\fP \fIlatitude_degrees\fP
+\fBlon_ref\fP \fBW\fPor\fBE\fP
+\fBlon\fP \fIlongitude_degrees\fP
+\fBalt\fP \fIalitude_meters_asl\fP
+\fBhdg_ref\fP \fBT\fPor\fBM\fP
+\fBhdg\fP \fIdegrees\fP
+\fBspeed\fP \fInumber\fP
+\fBnmea_msg_gpgga\fP \fIstring\fP
+\fButc_time_sec\fP \fIinteger\fP
+\fButc_time_usec\fP \fIinteger\fP
+\fBdata_type\fP \fIcode\fP
+\fBdata_size\fP \fIinteger\fP
+.Ed
+With
+.Fl a
+option, each ray has one line of output of form:
+.Bd -literal -offset indent
+\fBray\fP \fIindex\fP \fIYYYY/MM/DD\fP \fIHH:MM:SS.SS\fP \fBlon\fP \fIdeg\fP \fBlat\fP \fIdeg\fP \fBaz\fP \fIdeg\fP \fBel\fP \fIdeg\fP
+.Ed
+.Sh ENVIRONMENT
+.Ev RAXPOL_OLD_FMT
+set and non-zero is equivalent to
+.Fl l .
+.Sh AUTHOR
+.An Gordon Carrie
+.Mt dev0@trekix.net

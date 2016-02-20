@@ -1,0 +1,576 @@
+#!/bin/sh
+#
+#	raxpol_sweep_svg --
+#		Make SVG image of a RaXPol sweep. See raxpol_sweep_svg (1).
+#
+# Copyright (c) 2016, Gordon D. Carrie. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#     * Redistributions of source code must retain the above copyright
+#     notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#     notice, this list of conditions and the following disclaimer in the
+#     documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Please send feedback to dev0@trekix.net
+#
+########################################################################
+
+set -e
+
+# Check whether a value is a number.
+check_num() {
+    name="$1"
+    val="$2"
+    if ! test $val
+    then
+	printf "%s not set\n" "$name" 1>&2
+	exit 1
+    fi
+    if ! printf '%g' $val > /dev/null 2>&1
+    then
+	printf "$0: expected number for %s, got %s\n" "$name" "$val" 1>&2
+	exit 1
+    fi
+}
+
+# Try reading file as post 2011 format, or pre 2011 format, or give up.
+testread() {
+    f="$1"
+    if ! raxpol_file_hdr $f > /dev/null 2>&1
+    then
+	RAXPOL_OLD_FMT=1
+	export RAXPOL_OLD_FMT
+	if ! raxpol_file_hdr $f > /dev/null 2>&1
+	then
+	    echo "$0: could not read $f" 1>&2
+	    exit 1
+	fi
+    fi
+}
+
+site_name="RAXPOL"
+x_min=
+x_max=
+y_min=
+y_max=
+doc_width=1400
+font_sz=18
+legend_width=64
+top=36
+left=80
+prx=6					# Precision in labels
+
+# Earth radius, for geog functions. See geog_lib (3).
+GEOG_REARTH="6366707.0"
+export GEOG_REARTH
+
+while getopts :npr:b:w:z:l:m:c:o: opt
+do
+    case "$opt"
+    in
+	p)
+            pr_img_path="1"
+            ;;
+	n)
+            no_clobber="1"
+            ;;
+	r)
+	    root="$OPTARG"
+	    ;;
+	b)
+	    if [ "$OPTARG" != "default" ]
+	    then
+		# Given x_min=v,x_max=v,y_min=v,y_max=v
+		# eval x_min=v;x_max=v;y_min=v;y_max=v
+		eval `echo "$OPTARG" | sed 's/,/;/g'`
+	    fi
+	    ;;
+	w)
+	    doc_width="$OPTARG"
+	    ;;
+	z)
+	    font_sz="$OPTARG"
+	    ;;
+	l)
+	    legend_width="$OPTARG"
+	    ;;
+	m)
+	    eval `echo "$OPTARG" | sed 's/,/;/g'`
+	    ;;
+	c)
+	    color_fl="$OPTARG"
+	    ;;
+	o)
+	    img_path="$OPTARG"
+	    ;;
+	\?)
+	    echo "$0: unknown option $OPTARG" 1>&2
+	    exit 1
+	    ;;
+    esac
+done
+if test $x_min; then check_num "x_min" $x_min; fi
+if test $x_max; then check_num "x_max" $x_max; fi
+if test $y_min; then check_num "y_min" $y_min; fi
+if test $y_max; then check_num "y_max" $y_max; fi
+check_num "display width" $doc_width
+check_num "font size" $font_sz
+check_num "legend width" $legend_width
+check_num "top margin" $top
+check_num "left margin" $left
+shift `expr $OPTIND - 1`
+cmd=`basename $0`
+if [ $# -ne 3 ]
+then
+    {
+	echo "Usage:"
+	echo "$cmd [-n] [-p] [-b bounds] [-w pixels] [-z pixels]"
+	echo "    [-l pixels] [-m margins] [-c color_file] [-r root_path]"
+	echo "    [-o output_path] data_type sweep_angle vol_id < vol_list"
+    } 1>&2
+    exit 1
+fi
+data_type="$1"
+swp_angl="$2"
+vol_id="$3"
+
+if ! test "$data_type"
+then
+    echo "${cmd}: raxpol data type not set" 1>&2
+    exit 1
+fi
+data_types="DBMHC DBMVC DBZ DBZ1 VEL ZDR PHIDP RHOHV STD SNRHC SNRVC"
+for d in $data_types
+do
+    if [ $d = $data_type ]
+    then
+	valid=1
+    fi
+done
+if ! test $valid
+then
+    echo "$0: data type must be one of $data_types" 1>&2
+    exit 1
+fi
+if ! test "$swp_angl"
+then
+    echo "${cmd}: sweep angle not set" 1>&2
+    exit 1
+fi
+if ! test "$vol_id"
+then
+    echo "${cmd}: raxpol volume identifier not set" 1>&2
+    exit 1
+fi
+
+# raxpol_sweep.awk reads standard input to this script. Its output must set
+# the following variables: raxpol_path scan_mode prev_vol next_vol nr_swp_ray0
+# nr_swp_num_rays nr_swp_dirn nr_swp_ymd nr_swp_hms swp_angl swp_idx
+# sweep_angles config
+eval `raxpol_sweep.awk -v vol="$vol_id" -v swp_angl=$swp_angl`
+if [ "$nr_swp_num_rays" -eq 0 ]
+then
+    echo "${cmd}: Could not find sweep" 1>&2
+    exit 1
+fi
+if [ $scan_mode != "PPI" -a $scan_mode != "RHI" ]
+then
+    echo "Could not determine scan mode"
+    exit 1
+fi
+if [ $nr_swp_dirn = "incr" ]
+then
+    dirn="increasing"
+elif [ $nr_swp_dirn = "decr" ]
+then
+    dirn="decreasing"
+fi
+if ! test $img_path
+then
+    img_path=`printf "RAXPOL-%s_%s_%s_%.1f.svg" \
+	   $vol_id $data_type $scan_mode $swp_angl`
+fi
+if test $pr_img_path
+then
+    echo "$img_path"
+    exit 0
+fi
+if test $no_clobber && test -f $img_path
+then
+    echo "$img_path"
+    exit 0
+fi
+if ! test "$color_fl"
+then
+    if test "$RAXPOL_COLOR_DIR"
+    then
+	color_fl="${RAXPOL_COLOR_DIR}/${data_type}.clrs"
+    else
+	color_fl="SHARE_DIR/colors/${data_type}.clrs"
+    fi
+fi
+if ! test -f "$color_fl"
+then
+    echo "${cmd}: No color file named $color_fl" 1>&2
+    exit 1
+fi
+if test $root &&  ! echo $raxpol_path | grep '^/' > /dev/null
+then
+    raxpol_path="${root}/${raxpol_path}"
+fi
+if ! test -f $raxpol_path
+then
+    echo "${cmd}: no readable RaXPol file named $raxpol_path" 1>&2
+    exit 1
+fi
+testread $raxpol_path
+
+# Get radar location from ray headers
+eval `raxpol_ray_hdrs -a -s $nr_swp_ray0 -c $nr_swp_num_rays \
+	$raxpol_path \
+    | awk '
+	BEGIN {
+	    NAN = -999.0;
+	    lon0 = NAN;
+	}
+	{
+	    # Keep longitudes within 180 degrees of longitude of first ray.
+	    lon = $6;
+	    if ( lon0 == NAN ) {
+		lon0 = lon;
+	    }
+	    if ( lon > lon0 + 180.0 ) {
+		lon -= 360.0;
+	    }
+	    if ( lon <= lon0 - 180.0 ) {
+		lon += 360.0;
+	    }
+	    sum_lon += lon;
+	    lat = $8;
+	    sum_lat += lat;
+	    n++;
+	}
+	END {
+	    radar_lon = sum_lon / n;
+	    radar_lat = sum_lat / n;
+	    printf "radar_lon=%-10.5f;", radar_lon;
+	    printf "radar_lat=%-10.5f;", radar_lat;
+	    printf "\n";
+	}'`
+check_num "radar longitude" $radar_lon
+check_num "radar latitude" $radar_lat
+if ! test "$RAXPOL_GEOG_PROJ"
+then
+    RAXPOL_GEOG_PROJ="CylEqDist $radar_lon $radar_lat"
+fi
+if ! test "$RAXPOL_GEOG_PROJ"
+then
+    echo "${cmd}: could not set projection" 1>&2
+    exit 1
+fi
+SWEEP_IMG_PROJ="$RAXPOL_GEOG_PROJ"
+SWEEP_LIMITS_PROJ="$RAXPOL_GEOG_PROJ"
+export SWEEP_IMG_PROJ SWEEP_LIMITS_PROJ
+
+# Plot limits default to ray length in all directions.
+eval `raxpol_file_hdr $raxpol_path | awk '
+    /num_rng_gates/ {
+	num_gates = $2;
+    }
+    /range_gate_spacing/ {
+	gate_len = $2;
+    }
+    END {
+	printf "num_gates=%d;", num_gates;
+	printf "gate_len=%d;", gate_len;
+	printf "ray_len=%.1f", num_gates * gate_len;
+	printf "\n"
+    }
+'`
+check_num "ray length" $ray_len
+eval `sweep_limits $radar_lon $radar_lat $ray_len \
+	| awk '
+	    {
+		printf "x_min_dflt=%.1f;", $1;
+		printf "x_max_dflt=%.1f;", $2;
+		printf "y_min_dflt=%.1f;", $3;
+		printf "y_max_dflt=%.1f;\n", $4;
+	    }'`
+x_min=${x_min:-${x_min_dflt}}
+x_max=${x_max:-${x_max_dflt}}
+y_min=${y_min:-${y_min_dflt}}
+y_max=${y_max:-${y_max_dflt}}
+
+if [ "$scan_mode" = "RHI" ]
+then
+    x_label='Distance down range (m)'
+    y_label='Height (m)'
+elif [ "$scan_mode" = "PPI" ]
+then
+    x_label='East-west (m)'
+    y_label='North-south (m)'
+else
+    echo "Unknown scan mode" 1>&2
+    exit 1
+fi
+
+# top1 holds specified height of top margin plus space for caption
+sweep_width=`echo "$x_max - $x_min" | bc -l`
+sweep_height=`echo "$y_max - $y_min" | bc -l`
+top1=`echo "$top + 6 * $font_sz" | bc -l`
+right=`echo "$legend_width + 8 * $font_sz" | bc -l`
+bottom=`echo "4 * $font_sz" | bc -l`
+plot_width=`echo "$doc_width - $left - $right" | bc -l`
+plot_height=`echo "$plot_width * $sweep_height / $sweep_width" | bc -l`
+doc_height=`echo "$plot_height + $top1 + $bottom" | bc -l`
+legend_height=`echo "$plot_height * 0.75" | bc -l`
+
+print_svg() {
+    printf '<?xml version="1.0" encoding="UTF-8"?>\n'
+    # "make install" inserts SHARE_DIR
+    style_sheet="SHARE_DIR/raxpol_sweep.css"
+    if test -f $style_sheet
+    then
+	printf "<?xml-stylesheet href=\"%s\" type=\"text/css\"?>\n" $style_sheet
+    fi
+    printf '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN"\n'
+    printf '    "http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/'
+    printf 'svg10.dtd">\n'
+    printf '<svg\n'
+    printf '    width="%g"\n' $doc_width
+    printf '    height="%g"\n' $doc_height
+    printf '    xmlns="http://www.w3.org/2000/svg"\n'
+    printf '    xmlns:xlink="http://www.w3.org/1999/xlink">\n\n'
+    x_px=`echo "$left + 3 * $font_sz" | bc -l`
+    y_px=`echo "$top + 2 * $font_sz" | bc -l`
+    printf '<title id="doc_title">'
+    printf '%s %s %s %s' $site_name $nr_swp_ymd $nr_swp_hms $data_type
+    printf '</title>\n'
+    printf '<desc id="raxpol_path">%s</desc>\n' $raxpol_path
+    printf '<desc id="site_name">%s</desc>\n' $site_name
+    printf "<desc id=\"vol_id\">%s</desc>\n" $vol_id
+    printf '<desc id="scan_mode">%s</desc>\n' $scan_mode
+    printf '<desc id="rearth">%s</desc>\n' $GEOG_REARTH
+    printf '<desc id="radar_lon">%s</desc>\n' $radar_lon
+    printf '<desc id="radar_lat">%s</desc>\n' $radar_lat
+    printf '<desc id="sweep_time">%s %s</desc>\n' $nr_swp_ymd $nr_swp_hms
+    printf '<desc id="data_type">%s</desc>\n' "$data_type"
+    printf '<desc id="data_types">%s</desc>\n' "$data_types"
+    printf "<desc id=\"swp_angl\">%s</desc>\n" $swp_angl
+    printf "<desc id=\"swp_idx\">%s</desc>\n" $swp_idx
+    printf "<desc id=\"sweep_angles\">%s</desc>\n" "$sweep_angles"
+    printf "<desc id=\"prev_vol\">%s</desc>\n\n" $prev_vol
+    printf "<desc id=\"next_vol\">%s</desc>\n\n" $next_vol
+    printf "<desc id=\"config\">%s</desc>\n\n" "$config"
+    printf "<!-- END OF SVG FILE HEADERS -->\n\n"
+
+    printf "<!-- START PLOT -->\n\n"
+
+    # pisa input. See pisa (1).
+    printf "<!-- START PISA PLOT -->\n\n"
+    {
+	echo x_left: $x_min
+	echo x_right: $x_max
+	echo y_bottom: $y_min
+	echo y_top: $y_max
+	echo left_mgn: $left
+	echo right_mgn: $right
+	echo top_mgn: $top1
+	echo bottom_mgn: $bottom
+	echo svg_width: $doc_width
+	echo font_sz: $font_sz
+	echo x_prx: $prx
+	echo y_prx: $prx
+	echo x_title: $x_label
+	echo y_title: $y_label
+	echo start_svg:
+
+	# sweep_img input. sweep_img output also goes to pisa.
+	{
+	    echo scan_type: $scan_mode
+	    echo radar_lon: $radar_lon
+	    echo radar_lat: $radar_lat
+	    echo num_rays: $nr_swp_num_rays
+	    raxpol_ray_hdrs -a -s $nr_swp_ray0 -c $nr_swp_num_rays $raxpol_path \
+	    | awk '
+		{
+		    az = az " " $10;
+		    el = el " " $12;
+		}
+		END {
+		    print "az: " az;
+		    print "el: " el;
+		}
+	    '
+	    raxpol_file_hdr $raxpol_path \
+	    | awk '
+		/num_rng_gates/ {
+		    num_gates = $2;
+		    print "num_gates: " num_gates;
+		}
+		/range_gate_spacing/ {
+		    ds = $2;
+		    printf "gates: ";
+		    for (n = 0; n < num_gates; n++) {
+			printf " %.1f", n * ds;
+		    }
+		    printf "\n";
+		    exit
+		}
+	    '
+	    echo colors:
+	    awk // $color_fl
+	    echo data:
+	    raxpol_dat -s $nr_swp_ray0 -c $nr_swp_num_rays -m $data_type \
+		    $raxpol_path \
+	    | awk '{
+		# Delete moment name.
+		$1 = "";
+		print;
+	    }'
+	} | sweep_img | awk '
+	    BEGIN {
+		close_poly = "";
+	    }
+	    /color/ {
+		printf "%s\npath: style=\"fill: %s; %s\"\n",
+			close_poly, $2, ENVIRON["RAXPOL_SVG_STYLE"];
+		close_poly = "end_path:\n";
+	    }
+	    /gate/ {
+		printf "M %.1f %.1f\n", $2, $3;
+		printf "L %.1f %.1f\n", $4, $5;
+		printf "L %.1f %.1f\n", $6, $7;
+		printf "L %.1f %.1f\nZ\n", $8, $9;
+	    }
+	    END {
+		print close_poly
+	    }
+	'
+	echo end_svg:
+    } | pisa
+    printf "<!-- END OF PISA PLOT -->\n"
+
+    x_px=`echo "$left + $plot_width + 18" | bc -l`
+    y_px=`echo "$top1 + 9" | bc -l`
+    printf '<g\n'
+    printf '    id="color_legend"\n'
+    printf '    transform="translate(%f,%f)">\n' $x_px $y_px
+    color_legend $legend_width $legend_height $font_sz < $color_fl \
+	| sed 's/text/text class="pisa_fg"/'
+    printf '</g>\n'
+
+    # Beautify longitude and latitude for caption
+    lonlat=`awk -v lon=$radar_lon -v lat=$radar_lat '
+	BEGIN {
+	    if ( lon >= 0.0 ) {
+		printf "%.4f deg E, ", lon
+	    } else {
+		printf "%.4f deg W, ", -lon
+	    }
+	    if ( lat >= 0.0 ) {
+		printf "%.4f deg N", lat
+	    } else {
+		printf "%.4f deg S", -lat
+	    }
+	}'`
+    caption="$site_name at $lonlat."
+    len=`echo $caption | wc -c`
+    x_px=`echo "$left + $plot_width / 2.0" | bc -l`
+    y_px=`echo "$top + 0.5 * $font_sz" | bc -l`
+    printf '<text id="site_loc_caption" class="pisa_fg raxpol_caption" '
+    printf 'x="%f" y="%f" font-size="%f" text-anchor="middle">' \
+	    $x_px $y_px $font_sz
+    printf '%s' "$caption"
+    printf '</text>\n\n'
+
+    caption="Sweep time = $nr_swp_ymd $nr_swp_hms"
+    len=`echo $caption | wc -c`
+    x_px=`echo "$left + $plot_width / 2.0" | bc -l`
+    y_px=`echo "$y_px + 1.5 * $font_sz" | bc -l`
+    printf '<text id="sweep_time_caption" class="pisa_fg raxpol_caption" '
+    printf 'x="%f" y="%f" font-size="%f" text-anchor="middle">' \
+	    $x_px $y_px $font_sz
+    printf '%s' "$caption"
+    printf '</text>\n\n'
+
+    caption="RAXPOL data type = $data_type"
+    len=`echo $caption | wc -c`
+    x_px=`echo "$left + $plot_width / 2.0" | bc -l`
+    y_px=`echo "$y_px + 1.5 * $font_sz" | bc -l`
+    printf '<text id="data_type_caption" class="pisa_fg raxpol_caption" '
+    printf 'x="%f" y="%f" font-size="%f" text-anchor="middle">' \
+	    $x_px $y_px $font_sz
+    printf '%s' "$caption"
+    printf '</text>\n\n'
+
+    if [ "$scan_mode" = "RHI" ]
+    then
+	    caption="RHI az = $swp_angl deg, el $dirn"
+    else
+	    caption="PPI tilt = $swp_angl deg, az $dirn"
+    fi
+    len=`echo $caption | wc -c`
+    x_px=`echo "$left + $plot_width / 2.0" | bc -l`
+    y_px=`echo "$y_px + 1.5 * $font_sz" | bc -l`
+    printf '<text id="sweep_angle_caption" class="pisa_fg raxpol_caption" '
+    printf 'x="%f" y="%f" font-size="%f" text-anchor="middle">' \
+	    $x_px $y_px $font_sz
+    printf '%s' "$caption"
+    printf '</text>\n\n'
+
+    printf '<!-- END OF PLOT -->\n\n'
+
+    # "make install" inserts SHARE_DIR
+    raxpol_sweep_js="SHARE_DIR/raxpol_sweep.js"
+    if test -f $raxpol_sweep_js
+    then
+	printf '<!-- ELEMENTS FOR SCRIPTS -->\n\n'
+	printf '<script\n'
+	printf '    type="application/ecmascript"\n'
+	printf '    xlink:href="%s"\n' $raxpol_sweep_js
+	printf '/>\n\n'
+
+	printf '<!-- Cursor location, not displayed,'
+	printf ' until %s modifies it. -->\n' $raxpol_sweep_js
+	printf '<text\n'
+	printf '    id="raxpol_cursor_loc"\n'
+	printf '    class="interactive"\n'
+	printf '    visibility="hidden"\n'
+	printf '    display="none"\n'
+	printf '    x="12.0"\n'
+	printf '    y="4.0"\n'
+	printf '    dominant-baseline="hanging">\n'
+	printf '.\n'
+	printf '</text>\n\n'
+
+	printf '<!-- END OF ELEMENTS FOR SCRIPTS -->\n'
+    fi
+
+
+    printf '</svg>\n'
+}
+if [ $img_path = "-" ]
+then
+    print_svg
+else
+    print_svg > $img_path
+    echo $img_path
+fi
+exit 0

@@ -1,0 +1,151 @@
+.\" 
+.\" Copyright (c) 2016, Gordon D. Carrie. All rights reserved.
+.\" 
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 
+.\"     * Redistributions of source code must retain the above copyright
+.\"     notice, this list of conditions and the following disclaimer.
+.\"     * Redistributions in binary form must reproduce the above copyright
+.\"     notice, this list of conditions and the following disclaimer in the
+.\"     documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\" A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\" HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+.\" TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+.\" PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+.\" LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+.\" NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+.\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\" 
+.\" Please address questions and feedback to dev0@trekix.net
+.\"
+.Pp
+.Dd $Mdocdate$
+.Dt RAXPOL_FILE_HDR 1
+.Os UNIX
+.Sh NAME
+.Nm raxpol_file_hdr
+.Nd Print file header from a RaXPol moment file to standard output.
+.Sh SYNOPSIS
+.Nm raxpol_file_hdr
+.Op Fl V
+.Op Fl l
+.Op Ar raxpol_file
+.Sh DESCRIPTION
+With
+.Fl V ,
+this application just prints version information and exits.
+Otherwise, this application prints the file header from a RaXPol moment file to
+standard output. If then prints ray headers for the first and last rays in the
+format used by
+.Nm raxpol_ray_hdrs .
+See
+.Xr raxpol_ray_hdrs 1 .
+If
+.Ar raxpol_file
+is absent or
+.Ql - ,
+read standard input.
+.Fl l
+indicates file uses legacy, pre 2011, format.
+.Sh OUTPUT FORMAT
+Output has form:
+.Bd -literal -offset indent
+\fB************************ file header ************************\fP
+\fBversion_code\fP \fIinteger\fP
+\fBasp_chirp_bandwidth\fP \fIfloat\fP
+\fBasp_chirp_center_freq\fP \fIfloat\fP
+\fBasp_chirp_intrl_delay\fP \fIinteger\fP
+\fBasp_chirp_width\fP \fIfloat\fP
+\fBasp_hop_ctr_freq\fP \fIfloat\fP
+\fBasp_hop_step_freq\fP \fIfloat\fP
+\fBasp_hop_width\fP \fIinteger\fP
+\fBasp_num_hops\fP \fIinteger\fP
+\fBasp_trigger_delay\fP \fIinteger\fP
+\fBasp_tukey_alpha\fP \fIfloat\fP
+\fBasp_waveform_type\fP \fIinteger\fP
+\fBasp_chirp_delay\fP \fIinteger\fP
+\fBclutter_filter_width\fP \fIfloat\fP
+\fBclutter_avg_intvl\fP \fIinteger\fP
+\fBdata_rate\fP \fIfloat\fP
+\fBfft_length\fP \fIinteger\fP
+\fBfft_window_type\fP \fIinteger\fP
+\fBauto_file_roll_num_rec\fP \fIinteger\fP
+\fBauto_file_roll_num_scans\fP \fIinteger\fP
+\fBauto_file_roll_flsz\fP \fIinteger\fP
+\fBauto_file_roll_start_time\fP \fIinteger\fP
+\fBauto_file_roll_type\fP \fIinteger\fP
+\fBfilter_bandwidth\fP \fIfloat\fP
+\fBgroup_interval\fP \fIinteger\fP
+\fBH_dBZ_dBm_offset\fP \fIfloat\fP
+\fBH_noise_power\fP \fIfloat\fP
+\fBintegration_time\fP \fIfloat\fP
+\fBmax_sampled_range\fP \fIfloat\fP
+\fBnum_rng_gates\fP \fIcount\fP
+\fBnumber_group_pulses\fP \fIinteger\fP
+\fBpost_decimation_level\fP \fIinteger\fP
+\fBpost_averaging_interval\fP \fIinteger\fP
+\fBpri1\fP \fIinteger\fP
+\fBpri2\fP \fIinteger\fP
+\fBpri_total\fP \fIinteger\fP
+\fBprimary_decimation_CIC\fP \fIinteger\fP
+\fBpulse_compression\fP \fIflag\fP
+\fBfir_output_len_ratio\fP \fIfloat\fP
+\fBfir_output_offset_ratio\fP \fIfloat\fP
+\fBrange_gate_spacing\fP \fImeters\fP
+\fBrange_resolution\fP \fImeters\fP
+\fBrecord_moments\fP \fIflag\fP
+\fBrecord_raw\fP \fIflag\fP
+\fBrecording_enabled\fP \fIflag\fP
+\fBservmode\fP \fIcode\fP \fI(name)\fP
+\fBserver_state\fP \fIinteger\fP
+\fBskip_count\fP \fIinteger\fP
+\fBsoftware_decimation_level\fP \fIinteger\fP
+\fBsumpower\fP \fIinteger\fP
+\fBswitch_delay\fP \fIinteger\fP
+\fBswitch_padding\fP \fIinteger\fP
+\fBswitch_width\fP \fIinteger\fP
+\fBtotal_avg_intvl\fP \fIinteger\fP
+\fBtwta_internal_delay\fP \fIinteger\fP
+\fBtx_pulse_bracketing\fP \fIinteger\fP
+\fBtx_delay\fP \fIinteger\fP
+\fBtx_trigger_delay\fP \fIinteger\fP
+\fBtx_pulse_center_offset\fP \fIinteger\fP
+\fBunambiguous_range\fP \fIkilometers\fP
+\fBclutter_filter\fP \fIinteger\fP
+\fBcustom_TX_waveform_was_used\fP \fIinteger\fP
+\fBV_dBZ_dBm_offset\fP \fIfloat\fP
+\fBv_noise_dBm\fP \fIfloat\fP
+\fBzero_range_gate_index\fP \fIfloat_meters\fP
+\fBscan_type\fP \fIcode\fP \fI(name)\fP
+\fBnum_sweeps\fP \fIfloat\fP
+\fBtimestamp_sec\fP \fIinteger\fP
+\fBtimestamp_usec\fP \fIinteger\fP
+\fBpulse_filter_file_name\fP \fIstring\fP
+\fBcustom_waveform_file_name\fP \fIstring\fP
+\fBnum_rays\fP \fIcount\fP
+\fB********************* first ray *********************\fP
+
+.Ed
+Then process prints headers for first ray, as described in
+.Xr raxpol_ray_hdrs 1 .
+Then it prints
+.Bd -literal -offset indent
+\fB********************** last ray *********************\fP
+
+.Ed
+followed by headers for the last ray in the file.
+.Sh ENVIRONMENT
+Non-zero
+.Ev RAXPOL_OLD_FMT
+environment variable is same as
+.Fl l .
+.Sh AUTHOR
+.An Gordon Carrie
+.Mt dev0@trekix.net

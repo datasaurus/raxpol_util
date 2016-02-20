@@ -1,0 +1,244 @@
+#!/bin/sh
+#
+# Usage:
+#	raxpol_idx_html data_dir [host]
+#
+# Make index.html for raxpol_sweep.cgi for RaXPol moment files in data_dir.
+# data_dir can have one of two structures.
+# 1) RaXPol files are in one directory. Paths have form:
+#    data_dir/RAXPOL-YYYYMMDD-HHMMSS.dat
+# 2) RaXPol files are in one or more case directories. Paths have form:
+#    data_dir/MMDDYY/RAXPOL-YYYYMMDD-HHMMSS.dat
+#
+# Optional host sets web side address. Just give host name, without "http://".
+
+cmd=`basename $0`
+set -e
+if [ $# = 1 ]
+then
+    data_dir="$1"
+    host="localhost:8080"
+elif [ $# = 2 ]
+then
+    data_dir="$1"
+    host=$2
+else
+    echo "Usage: $cmd data_dir [host]" 1>&2
+    exit 1
+fi
+printf '<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>RAXPOL cases</title>
+</head>
+<body>
+<ul>
+' > index.html
+
+# Determine tree type. If tree==singl_dir, all RaXPol files for the site
+# are in one directory. If tree==case_dirs is false, RaXPol files are in case
+# directories, one level down.
+depth=`find $data_dir -name 'RAXPOL-????????-??????.dat' -exec dirname {} \; \
+	| sort -u | wc -l`
+if [ $depth -eq 1 ]
+then
+    tree="singl_dir"
+elif [ $depth -gt 1 ]
+then
+    tree="case_dirs"
+else
+    {
+	printf "$cmd: could not determine directory structure. "
+	printf "All RaXPol files must be in $data_dir, "
+	printf "or in case directories in $data_dir\n"
+    } 1>&2
+    exit 1
+fi
+
+if test $tree = "singl_dir"
+then
+    img_dir=img
+    vol_list=${img_dir}/vol_list
+    idx="index.html"
+    mkdir -p $img_dir
+
+    # Set defaults. Override with default configuration and then possibly
+    # local configuration.
+    resoln="0.01"
+    min_span="50.0,20.0"
+    max_dev="0.50"
+    swp_angl_resoln="0.2"
+    jump="12.0"
+    conf_fl_dflt="conf/raxpol_sweep.cgi.conf.dflt"
+    . $conf_fl_dflt
+    conf_fl="conf/raxpol_sweep.cgi.conf"
+    if test -f "$conf_fl"
+    then
+	. $conf_fl
+    fi
+    conf_dir=${img_dir}/conf
+    conf_fl=${conf_dir}/raxpol_sweep.cgi.conf
+    if test -f "$conf_fl"
+    then
+	. $conf_fl
+    fi
+
+    # Make volume list
+    if ! test -f $vol_list
+    then
+	echo "$cmd: making volume index for $data_dir"
+	raxpol_mk_vols -r $resoln -n $min_span -x $max_dev \
+	    -y $swp_angl_resoln -j $jump ${data_dir}/RAXPOL*.dat \
+	    > $vol_list
+    fi
+
+    # Make html for deployment index
+    echo "$cmd: making html index for $data_dir"
+    awk -v host=$host '
+	BEGIN {
+	    tmp_s = "DBMHC DBMVC DBZ DBZ1 VEL ZDR PHIDP RHOHV STD SNRHC \
+		    SNRVC";
+	    num_types = split(tmp_s, data_types);
+	    print "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
+	    print "<html>";
+	    print "<head>";
+	    printf "<title>RaXPol</title>";
+	    print "</head>";
+	    print "<body>";
+	    printf "<h1>RaXPol</h1>\n";
+	    print "<ul>";
+	}
+	$1 == "File" {
+	    path = $2;
+	    nm = path;
+	    sub(".*/", "", nm);
+	    printf "<h2>File: %s</h2>\n", nm;
+	}
+	$1 == "Vol" {
+	    vol_id = $4;
+	    scan_mode = $3;
+	    printf "<h3>%s Vol %s %s</h3>\n", nm, vol_id, scan_mode;
+	}
+	$1 ==  "Sweep" {
+	    swp_idx = $2;
+	    swp_angl = $6;
+	    swp_dat = $9;
+	    swp_tm = $10;
+	    print "<li><p>";
+	    printf "Sweep %d %s %s %.1f deg\n",
+		    swp_idx, swp_dat, swp_tm, swp_angl;
+	    for (i = 1; i <= num_types; i++) {
+		data_type = data_types[i];
+		printf "<a href=\"";
+		printf("http://%s/cgi-bin/raxpol_sweep.cgi?", host);
+		cgi_fmt = "vol_id=%s&swp_angl=%s&data_type=%s";
+		printf(cgi_fmt, vol_id, swp_angl, data_type);
+		printf "\">%s</a>\n", data_type;
+	    }
+	    print "</p></li>";
+	}
+	END {
+	    print "</ul>";
+	    print "</body>"
+	    print "</html>"
+	}
+    ' $vol_list > $idx
+    printf '</ul>\n</body>\n</html>\n' >> index.html
+elif test $tree = "case_dirs"
+then
+    find $data_dir -name 'RAXPOL-????????-??????.dat' -exec dirname {} \; \
+	    | sort -u \
+    | while read case_data_dir
+    do
+	case_id=`basename $case_data_dir`
+	case_img_dir=img/${case_id}
+	case_vol_list=${case_img_dir}/vol_list
+	case_idx="${case_img_dir}/${case_id}.html"
+	mkdir -p $case_img_dir
+
+	# Set defaults. Override with default configuration and then possibly
+	# local configuration.
+	resoln="0.01"
+	min_span="50.0,20.0"
+	max_dev="0.50"
+	swp_angl_resoln="0.2"
+	jump="12.0"
+	conf_fl_dflt="conf/raxpol_sweep.cgi.conf.dflt"
+	. $conf_fl_dflt
+	conf_fl="conf/raxpol_sweep.cgi.conf"
+	if test -f "$conf_fl"
+	then
+	    . $conf_fl
+	fi
+	case_conf_dir=${case_img_dir}/conf
+	case_conf_fl=${case_conf_dir}/raxpol_sweep.cgi.conf
+	if test -f "$case_conf_fl"
+	then
+	    . $case_conf_fl
+	fi
+
+	# Make volume list
+	if ! test -f $case_vol_list
+	then
+	    echo "$cmd: making volume index for $case_data_dir"
+	    raxpol_mk_vols -r $resoln -n $min_span -x $max_dev \
+		-y $swp_angl_resoln -j $jump ${case_data_dir}/RAXPOL*.dat \
+		> $case_vol_list
+	fi
+
+	# Make html for case index
+	echo "$cmd: making index for $case_id"
+	printf '<li><a href="%s">%s</a></li>\n' $case_idx $case_id >> index.html
+	awk -v host=$host -v case_id=$case_id '
+	    BEGIN {
+		tmp_s = "DBMHC DBMVC DBZ DBZ1 VEL ZDR PHIDP RHOHV STD SNRHC \
+			SNRVC";
+		num_types = split(tmp_s, data_types);
+		print "<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 3.2//EN\">";
+		print "<html>";
+		print "<head>";
+		printf "<title>RaXPol %s</title>", case_id;
+		print "</head>";
+		print "<body>";
+		printf "<h1>RaXPol %s</h1>\n", case_id
+		print "<ul>";
+	    }
+	    $1 == "File" {
+		path = $2;
+		nm = path;
+		sub(".*/", "", nm);
+		printf "<h2>File: %s</h2>\n", nm;
+	    }
+	    $1 == "Vol" {
+		vol_id = $4;
+		scan_mode = $3;
+		printf "<h3>%s Vol %s %s</h3>\n", nm, vol_id, scan_mode;
+	    }
+	    $1 ==  "Sweep" {
+		swp_idx = $2;
+		swp_angl = $6;
+		swp_dat = $9;
+		swp_tm = $10;
+		print "<li><p>";
+		printf "Sweep %d %s %s %.1f deg\n",
+			swp_idx, swp_dat, swp_tm, swp_angl;
+		for (i = 1; i <= num_types; i++) {
+		    data_type = data_types[i];
+		    printf "<a href=\"";
+		    printf("http://%s/cgi-bin/raxpol_sweep.cgi?", host);
+		    cgi_fmt = "case_id=%s&vol_id=%s&swp_angl=%s&data_type=%s";
+		    printf(cgi_fmt, case_id, vol_id, swp_angl, data_type);
+		    printf "\">%s</a>\n", data_type;
+		}
+		print "</p></li>";
+	    }
+	    END {
+		print "</ul>";
+		print "</body>"
+		print "</html>"
+	    }
+	' $case_vol_list > $case_idx
+    done
+    printf '</ul>\n</body>\n</html>\n' >> index.html
+fi

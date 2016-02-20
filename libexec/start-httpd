@@ -1,0 +1,42 @@
+mkdir -p log
+if uname -a | grep -i "ubuntu" > /dev/null
+then
+    httpd="/usr/sbin/mini-httpd"
+elif [ "`uname`" = "OpenBSD" -o "`uname`" = "FreeBSD" ]
+then
+    httpd="/usr/local/sbin/thttpd"
+elif [ "`uname`" = "Darwin" ]
+then
+    httpd="/opt/local/sbin/thttpd"
+else
+    echo "Could not find mini-httpd"
+fi
+log="`pwd`/log/mini-httpd.pid"
+rm -f $log
+eval `find . -name '*.html' | xargs cat | awk '
+	$0 ~ "localhost" || $0 ~ /10\.[0-9]+\.[0-9]+\.[0-9]+/ \
+		|| $0 ~ /192\.168.[0-9]+.[0-9]+/ {
+	    if (match($0,/localhost:[0-9]+/)) {
+		print substr($0,RSTART,RLENGTH)
+	    } else if (match($0,/10\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+/)) {
+		print substr($0,RSTART,RLENGTH)
+	    } else if (match($0,/192\.168\.[0-9]+\.[0-9]+:[0-9]+/)) {
+		print substr($0,RSTART,RLENGTH)
+	    }
+	}' | uniq | awk -F : '{print "host=" $1 ";port=" $2 ";"}'`
+if ! test $port
+then
+    port=80
+fi
+echo Starting $httpd on port $port
+if test -x $httpd && test $port && $httpd -p $port -i $log -c 'cgi-bin/*'
+then
+    echo Web site is at http://${host}:${port}
+    trap '
+	awk // '$log' | xargs kill
+	rm -f '$log'
+    ' EXIT QUIT TERM KILL
+else
+	echo Could not start $httpd 1>&2
+fi
+unset httpd log host port

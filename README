@@ -1,0 +1,240 @@
+WHAT IS THIS?
+
+raxpol_util is a set of Unix programs that fetch and display data from RaXPol
+moment files - files that the RaXPol signal processor writes, with names
+like RAXPOL-YYYYMMDD-HHMMSS.dat. The programs do not read RaXPol "raw" files.
+
+The software runs on Single Unix Specification V4 systems [1][2]. It has been
+tested on Ubuntu Linux, MacOS X, and FreeBSD.
+
+Distribution license is BSD.
+
+--------------------------------------------------------------------------------
+
+INSTALLATION
+
+make builds and installs the utilities, like so:
+
+$ cd src
+$ make
+$ make install
+
+By default, software installs in /usr/local. This requires superuser
+privileges.  Define a different destination with PREFIX, e.g.
+
+$ make install PREFIX=${HOME}/local
+
+In this case, add ${HOME}/local/bin to PATH to make the utilities visible,
+like so:
+
+$ export PATH=${HOME}/local/bin:$PATH
+
+--------------------------------------------------------------------------------
+
+COMMAND LINE UTILITIES
+
+The following utilities access RaXPol moment files. See the man pages for
+complete details.  Note: for "old" RaXPol files, made before 2011, go:
+"export RAXPOL_OLD_FMT=1" before running the utilities.
+
+raxpol_file_hdr
+    Prints a file header, e.g.
+
+    $ raxpol_file_hdr /home/radarop/data/072814/RAXPOL-20140728-180536.dat
+
+raxpol_ray_hdrs
+    Prints ray headers.
+
+    $ raxpol_ray_hdrs /home/radarop/data/072814/RAXPOL-20140728-180536.dat
+
+    prints all ray headers. Output is clunky but easy to manipulate.  It is
+    also large, about 20 megabytes per gigabyte of RaXPol data.
+
+    $ raxpol_ray_hdrs -a /home/radarop/data/072814/RAXPOL-20140728-180536.dat
+
+    prints a shorter list commonly used header values - time, location,
+    azimuth, and elevation.
+
+    $ raxpol_ray_hdrs -a -s 1000 -c 100 /home/radarop/data/072814/RAXPOL-20140728-180536.dat
+
+    prints abbreviated headers for 100 rays starting at ray index 1000.
+
+raxpol_dat
+    Prints moment data values. The man page describes the output, and options
+    that select moments and ranges of rays. Beware of voluminous output.
+
+raxpol_mk_vols
+    Prints an index of sweeps and volumes for a set of RaXPol moment files.
+    A sweep is a set of rays with a common azimuth or elevation. A volume
+    is a sequence of sweeps. RaXPol moment files assign a sweep and volume
+    for each ray, but the information is unreliable for complicated sector
+    scans and RHI's. raxpol_mk_vols searches sequences of azimuths and
+    elevations ray headers for sweep and volume patterns. Command line options
+    tune the search.
+
+    Sample usage:
+
+    $ raxpol_mk_vols /home/radarop/data/072814/RAXPOL*.dat > vol_list
+
+    Note that the command line specifies all RaXPol files in the directory.
+    Do this because volumes sometimes straddle file boundaries. raxpol_mk_vols
+    can take several minutes if the RaXPol files are large. Upon successful
+    completion, vol_list will be a human readable text file with a list of file
+    paths, volume identifiers of form YYYYMMDD_HHMMSS, and sweep headers.
+
+raxpol_sweep_svg
+    Makes a sweep image given raxpol_mk_vols output for a sweep defined with
+    command line options. See DISPLAYING INDIVIDUAL SWEEPS below.
+
+raxpol_idx_html
+    Makes a web site for a set of RaXPol files. See BROWSING VOLUMES AND
+    SWEEPS below.
+
+--------------------------------------------------------------------------------
+
+DISPLAYING INDIVIDUAL SWEEPS
+
+First index the data with raxpol_mk_vols, e.g.
+
+$ raxpol_mk_vols /home/radarop/data/072814/RAXPOL*.dat > vol_list
+
+Then browse the vol_list for a volume identifier (YYYYMMDD-HHMMSS) near a
+time of interest, e.g. 20140728-204200. Volume identifiers appear on lines
+that start with "Vol". Then pick a sweep angle, e.g. 1.0 degrees.
+
+Then go:
+
+$ raxpol_sweep_svg DBZ 1.0 20140728-204200 < vol_list
+
+The first argument specifies the data type. It must be one of: DBMHC DBMVC
+DBZ DBZ1 VEL ZDR PHIDP RHOHV STD SNRHC or SNRVC. The second argument is sweep
+angle.  raxpol_sweep_svg will display the sweep from volume 20140728-204200
+with angle nearest the specified angle.  If all goes well, raxpol_sweep_svg
+will create a Scalable Vector Graphics (SVG) file and print its name.
+
+Open the SVG file with a web browser. It should display a sweep. If the
+web browser has Javascript and runs on the system with raxpol_util installed,
+the image will be interactive.  Pan the image with the mouse. Zoom with the
+mouse wheel, or "+" and "-". Edit /usr/local/share/raxpol/raxpol_sweep.css or
+${HOME}/local/share/raxpol/raxpol_sweep.css, as appropriate, to adjust fonts
+and colors. Save the image to Postscript or PDF with the browser "Print"
+menu. Note that File->Save will save the original image, forgetting any
+panning or zooming.
+
+Inkscape and Adobe Illustrator can also open and edit the image.
+
+Use ImageMagick's convert command to convert the image to other image formats,
+e.g.
+
+$ convert RAXPOL-20140728-204200_DBZ_PPI_1.0.svg RAXPOL-20140728-204200_DBZ_PPI_1.0.png
+
+Note that ImageMagick ignores style sheets.
+
+--------------------------------------------------------------------------------
+
+BROWSING VOLUMES AND SWEEPS
+
+raxpol_util includes software to browse images on a web site. The system will
+need a web server. raxpol_util is set up for mini-httpd, which is a small,
+simple web server. Regular users can start and stop it.
+
+On MacOS X, MacPorts lists it as thttpd (tiny/turbo/throttling web server).
+Install with:
+
+$ sudo port install thttpd
+
+On Ubuntu, it goes by mini_httpd. Install with:
+
+$ sudo apt-get install mini-httpd
+
+On other systems, install with the system package manager - yum or apt-get,
+or build from source [3][4].
+
+Install raxpol_util again, but with "make install-www" e.g.
+
+$ make install-www PREFIX_WWW=${HOME}/pecan/raxpol/www
+
+where PREFIX_WWW gives the path to the web site. Read carefully. The make
+target is not "install", it is "install-www". The destination is not "PREFIX",
+it is "PREFIX_WWW". In this example, web pages and images will appear in
+${HOME}/pecan/raxpol/www. Go to the web site directory.  ls should produce:
+
+$ ls
+bin cgi-bin conf libexec share
+
+Add the bin directory to PATH and make a site index with raxpol_idx_html:
+
+$ raxpol_idx_html /path_to_raxpol_files localhost:2014
+
+path_to_raxpol_files must specify a directory with RaXPol data files. They
+can either be in the directory, or they can be one level down, e.g. if the
+RaXPol files are collected by case. The first time it runs, raxpol_idx_html
+makes volume and sweep indeces, which can take a while. localhost is the host
+name. Every computer refers to itself as localhost. 2014 is the port number.
+It should be an integer greater than 1023. See [5][6]. If using mini-httpd,
+start the web server with:
+
+$ . ./libexec/start-httpd
+
+Do not worry about "bind: Address already in use".  Then point a browser to
+http://localhost:2014 . If all goes well, an index will appear. Click the link
+for a sweep to view it. The image behaves like one raxpol_sweep_svg created. In
+addition, left and right arrows select previous and next volumes. Up and down
+arrows select higher and lower sweep angles. Click on the moment name in the
+title for a pop up menu of moments.  Click on the sweep angle in the title for
+a pop up menu of sweep angles. Bug note: to drag a new image, click on a colored
+area.
+
+Note: Web server EXITS, and web site DISAPPEARS, at log out. If httpd balks
+at start up, check for renegade servers on Linux with 'ps -ef | grep httpd',
+on MacOS X with 'ps -x -o pid,ppid,command -U $USER', and kill them.
+
+raxpol_idx_html has to run only once. If logging back in, restart httpd
+like so:
+
+$ . ./libexec/start-httpd
+
+Images lazily appear on demand in the img directory in the web site directory. 
+They stay for faster reloading. If img becomes too big, clear it out like this:
+
+$ find img -name '*.svg' | xargs rm
+
+The server will make new images if they are needed again.
+
+A localhost site only works on the machine where the server is running.
+To view on other machines, specify the machine address, e.g.
+
+$ raxpol_idx_html /path_to_raxpol_files 10.197.12.192:2014
+
+and take the browser to http://10.197.12.192:2014 . For worldwide viewing,
+specify port 80, the "well known port" for the Web. On most systems, only
+superuser can use port 80.
+
+Tip: The raxpol data files should NOT be on the web site. The web server
+will call raxpol_util commands and tell them where the data files are.
+Visiting web browsers will be oblivious. They will only see images. Keep it so.
+
+Tip: Chrome, Safari, and Opera are fast. Firefox huff and puffs a lot.
+
+Other web servers, such as apache, nginx, and python simplehttpserver should
+work. Configure according to the server documentation and, if necessary,
+modify cgi-bin/raxpol_sweep.cgi, which tells the server how to make images.
+
+--------------------------------------------------------------------------------
+
+AUTHOR
+
+Gordon Carrie
+dev0@trekix.net
+gordon.carrie-1@ou.edu
+
+--------------------------------------------------------------------------------
+
+REFERENCES
+
+1. IEEE Std 1003.1-2008
+2. http://pubs.opengroup.org/onlinepubs/9699919799/toc.htm
+3. http://acme.com/software/thttpd
+4. http://acme.com/software/mini_httpd.
+5. http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xhtml , 20160215
+6. https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers , 2016/02/15

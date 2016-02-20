@@ -1,0 +1,99 @@
+.\" 
+.\" Copyright (c) 2016, Gordon D. Carrie. All rights reserved.
+.\" 
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 
+.\"     * Redistributions of source code must retain the above copyright
+.\"     notice, this list of conditions and the following disclaimer.
+.\"     * Redistributions in binary form must reproduce the above copyright
+.\"     notice, this list of conditions and the following disclaimer in the
+.\"     documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\" A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\" HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+.\" TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+.\" PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+.\" LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+.\" NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+.\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\" 
+.\" Please address questions and feedback to dev0@trekix.net
+.\"
+.Pp
+.Dd $Mdocdate$
+.Dt RAXPOL_MK_VOLS 1
+.Sh NAME
+.Nm raxpol_mk_vols
+.Nd Find sweeps and volumes in a set of RaXPol moment files.
+.Sh SYNOPSIS
+.Nm raxpol_mk_vols
+.Op Fl r Ar resoln
+.Op Fl n Ar min_span
+.Op Fl x Ar max_dev
+.Op Fl y Ar swp_angl_resoln
+.Op Fl j Ar jump
+.Ar file
+.Op Ar file ...
+.Sh DESCRIPTION
+.Nm raxpol_mk_vols
+identifies sweeps and volumes in a set of RaXPol moment files. A sweep is a
+set of rays with a common azimuth or elevation. It calls
+.Nm findswps ,
+which must be in the current path, to look for sweep patterns. A volume is a
+cycle of sweeps.
+.Sh OPTIONS
+.Bl -tag -width angle
+.It Fl r Ar resoln
+.Fl r
+option for findswps. See
+.Xr findswps 1 .
+.It Fl n Ar min_span
+.Fl n
+option for findswps. See
+.Xr findswps 1 .
+.It Fl x Ar max_dev
+.Fl x
+option for findswps. See
+.Xr findswps 1 .
+.It Fl y Ar swp_angl_resoln
+If a sweep angle differs from sweep angle at start of volume by less
+than
+.Ar swp_angl_resoln,
+assume the sweep starts a new volume.
+.It Fl j Ar jump
+If sweep angle jumps by
+.Ar jump ,
+degrees, assume sweep starts a new volume.
+.Sh OUTPUT FORMAT
+Standard output looks like:
+.Bd -literal -offset indent
+\fBConfig\fP \fBresoln\fP=\fIdeg\fP \fBmin_span\fP=\fIppi_deg\fP,\fIrhi_deg\fP \fBmax_dev\fP=\fIdeg\fP \fBswp_angl_resoln\fP=\fIdeg\fP \fBjump\fP=\fIdeg\fP
+\fBFile\fP \fIpath_to_data\fP/\fBRAXPOL\fP-\fIYYYYMMDD-HHMMSS\fP\fB.dat\fP
+\fBVol\fP \fB0\fP \fBPPI\fPor\fBRHI\fP \fIYYYYMMDD-HHMMSS\fP
+\fBSweep\fP \fB0\fP \fBPPI\fPor\fBRHI\fP \fBincr\fPor\fBdecr\fP \fBEl\fP \fInumber\fP \fBdegrees\fP \fBTime\fP \fIYYYY/MM/DD\fP \fIHH:MM:SS\fP \fBRays\fP \fIfirst\fP -> \fIlast\fP
+\fBSweep\fP \fB1\fP \fBPPI\fPor\fBRHI\fP \fBincr\fPor\fBdecr\fP \fBEl\fP \fInumber\fP \fBdegrees\fP \fBTime\fP \fIYYYY/MM/DD\fP \fIHH:MM:SS\fP \fBRays\fP \fIfirst\fP -> \fIlast\fP
+ ...
+\fBVol\fP \fB1\fP \fBPPI\fPor\fBRHI\fP \fIYYYYMMDD-HHMMSS\fP
+\fBSweep\fP \fB0\fP \fBPPI\fPor\fBRHI\fP \fBincr\fPor\fBdecr\fP \fBEl\fP \fInumber\fP \fBdegrees\fP \fBTime\fP \fIYYYY/MM/DD\fP \fIHH:MM:SS\fP \fBRays\fP \fIfirst\fP -> \fIlast\fP
+ ...
+\fBVol\fP \fB2\fP \fBPPI\fPor\fBRHI\fP \fIYYYYMMDD-HHMMSS\fP
+ ...
+\fBFile\fP \fIpath_to_data\fP/\fBRAXPOL\fP-\fIYYYYMMDD-HHMMSS\fP\fB.dat\fP
+ ...
+
+.Ed
+\fBConfig\fP line records parameters, which can be default, or as specified on command line.
+Each volume is identified by its start time, given as \fIYYYYMMDD-HHMMSS\fP.
+\fBfirst\fP and \fBlast\fP refer to indeces or first and last rays for the sweep in the current file.
+.Sh ENVIRONMENT
+.Ev RAXPOL_OLD_FMT
+set and non-zero means RaXPol moment files must be old (2011) format.
+.Sh AUTHOR
+.An Gordon Carrie
+.Mt dev0@trekix.net

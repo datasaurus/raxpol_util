@@ -1,0 +1,200 @@
+.\"
+.\" Copyright (c) 2014, Gordon D. Carrie. All rights reserved.
+.\" 
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 
+.\"     * Redistributions of source code must retain the above copyright
+.\"     notice, this list of conditions and the following disclaimer.
+.\"     * Redistributions in binary form must reproduce the above copyright
+.\"     notice, this list of conditions and the following disclaimer in the
+.\"     documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\" A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\" HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+.\" TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+.\" PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+.\" LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+.\" NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+.\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\"
+.\"
+.\" Please address questions and feedback to dev0@trekix.net
+.\"
+.Dd $Mdocdate$
+.Dt PISA 1
+.Os Unix
+.Sh NAME
+.Nm pisa
+.Nd Create an SVG document with a Cartesian plot in it.
+.Sh SYNOPSIS
+.Nm pisa
+.Sh DESCRIPTION
+This script creates a Cartesian plot in a SVG element.
+It reads plot parameters and data from standard
+input. It writes SVG code for the plot to standard output.
+Input must provide plot parameters first, followed by
+.Nm start_svg: ,
+followed by specifiers and data for plot elements, followed by
+.Nm end_svg: .
+.Sh PLOT PARAMETERS
+Plot parameters must come first. They can be in any order. The following
+parameters are mandatory.
+.Bl -tag -width svg_width
+.It Nm svg_width: Ar number
+Width of the SVG element in pixels.
+.It Nm x_left: Ar number
+Cartesian x coordinate of the left edge of the plot.
+.It Nm x_right: Ar number
+Cartesian x coordinate of the right edge of the plot.
+.It Nm y_bottom: Ar number
+Cartesian y coordinate of the bottom edge of the plot.
+.It Nm y_top: Ar number
+Cartesian y coordinate of the top edge of the plot.
+.El
+The following parameters are optional.
+.Bl -tag -width svg_width
+.It Nm svg_height: Ar number
+Height of the SVG element in pixels.
+.It Nm top_mgn: Ar number
+Size of margin between top of SVG element and top edge of plot, pixels.
+.It Nm right_mgn: Ar number
+Size of margin between right side of SVG element and right edge of plot, pixels.
+.It Nm bottom_mgn: Ar number
+Size of margin between bottom of SVG element and bottom edge of plot, pixels.
+This is in addition to space given to x axis labels and title.
+.It Nm left_mgn: Ar number
+Size of margin between left side of SVG element and left edge of plot, pixels.
+This is in addition to space given to y axis labels and title.
+.It Nm font_sz: Ar number
+Font size for axis labels, in pixels.
+.It Nm x_title: Ar string
+X axis label.
+.Ar string
+can have white space.
+.It Nm y_title: Ar string
+Y axis label.
+.Ar string
+can have white space.
+.It Nm x_prx: Ar number
+Number of significant digits in x axis labels.
+.It Nm y_prx: Ar number
+Number of significant digits in y axis labels.
+.El
+Parameter input ends with a line of form
+.Nm start_svg: .
+Pisa then validates the parameters and initializes the plot.
+.Sh PLOT ELEMENTS
+.Bl -tag -width svg_width
+.It Nm polygon: Op attributes
+Print a polygon - a set of connected points. The polygon element will have
+the given attributes.
+Each line of subsequent input should provide a coordinate
+pair specifying the Cartesian abscissa and ordinate of a point. The polygon
+ends with a line of form:
+.Nm end_poly: .
+If the document links to the optional
+.Pa pisa.js
+script, then
+.Ar attributes
+should include a
+.Va class
+attribute that places the polygon in class
+.Va line .
+This will ensure the polygon scales properly in interactive displays. See
+.Xr pisa.js 1 .
+.It Nm polyline: Op attributes
+Print a polyline - a set of connected points. The polyline element will have
+the given attributes.
+Each line of subsequent input should provide a coordinate
+pair specifying the Cartesian abscissa and ordinate of a point. The polyline
+ends with a line of form:
+.Nm end_poly: .
+If the document links to the optional
+.Pa pisa.js
+script, then
+.Ar attributes
+should include a
+.Va class
+attribute that places the polyline in class
+.Va line .
+This will ensure the polyline scales properly in interactive displays. See
+.Xr pisa.js 1 .
+.It Nm circle: Ar x Ar y Op attributes
+Draws a circle at Cartesian point
+.Ar x
+.Ar y
+with
+.Op attributes .
+.Op attributes
+should include
+.Va r ,
+specifying circle radius.
+If the document links to the optional
+.Pa pisa.js
+script, then
+.Ar attributes
+should include a
+.Va class
+attribute that places the circle in class
+.Va line .
+This will ensure the circle scales properly in interactive displays. See
+.Xr pisa.js 1 .
+.It Nm ellipse: Ar x Ar y Op attributes
+Draws an ellipse at Cartesian point
+.Ar x
+.Ar y
+with
+.Op attributes .
+.Op attributes
+should include
+.Va rx
+and
+.Va ry
+specifying ellipse radii.
+If the document links to the optional
+.Pa pisa.js
+script, then
+.Ar attributes
+should include a
+.Va class
+attribute that places the ellipse in class
+.Va line .
+This will ensure the ellipse scales properly in interactive displays. See
+.Xr pisa.js 1 .
+.It Nm path: Op attributes
+Draws a path with the given attributes.
+Each line of subsequent input should present a path command,
+.Nm M
+.Nm L
+.Nm C
+.Nm S
+.Nm Z
+followed by a suitable number of Cartesian coordinate pairs. The path
+ends with a line of form:
+.Nm end_path: .
+.El
+A line containing
+.Nm end_svg:
+indicates no more input. Pisa finishes printing SVG code for the element and
+exits.
+.Sh STYLING
+Foreground elements in the plot, such as text, tick marks, and borders, have
+SVG class attribute
+.Va pisa_fg .
+Background elements in the plot have SVG class attribute
+.Va pisa_bg .
+.Sh SEE ALSO
+Scalable Vector Graphics (SVG) 1.1 (Second Edition) http://www.w3.org/TR/SVG11
+.Xr pisa.js 1
+.Sh ETYMOLOGY
+.Nm pisa
+is Choctaw for
+.Ql view .
+.Sh AUTHOR
+Gordon Carrie (dev0@trekix.net)

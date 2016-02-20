@@ -1,0 +1,105 @@
+.\" 
+.\" Copyright (c) 2016, Gordon D. Carrie. All rights reserved.
+.\" 
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 
+.\"     * Redistributions of source code must retain the above copyright
+.\"     notice, this list of conditions and the following disclaimer.
+.\"     * Redistributions in binary form must reproduce the above copyright
+.\"     notice, this list of conditions and the following disclaimer in the
+.\"     documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\" A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\" HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+.\" TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+.\" PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+.\" LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+.\" NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+.\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\" 
+.\" Please address questions and feedback to dev0@trekix.net
+.\"
+.Pp
+.Dd $Mdocdate$
+.Dt RAXPOL_DAT 1
+.Os UNIX
+.Sh NAME
+.Nm raxpol_dat
+.Nd Print ray data from a RaXPol moment file to standard output.
+.Sh SYNOPSIS
+.Nm raxpol_dat
+.Op Fl V
+.Op Fl l
+.Op Fl b
+.Op Fl l
+.Op Fl r
+.Op Fl h Ar angle
+.Op Fl m Ar moment_name,moment_name,...
+.Op Fl s Ar index
+.Op Fl c Ar count
+.Op Ar raxpol_file
+.Sh DESCRIPTION
+This application prints ray data from a RaXPol moment file. If
+.Ar raxpol_file
+is absent or
+.Ql - ,
+read standard input.
+.Pp
+The following options are recognized:
+.Bl -tag -width DS
+.It Fl V
+Print version information and exit.
+.It Fl r
+Print ray headers with the data. Default is to just print ray data.
+.It Fl b
+Send native memory encoded output instead of ASCII.
+.It Fl l
+Input file is "old" (2011) format.
+.It Fl h
+Sets heading, overriding GPS heading in ray headers.
+.It Fl m Ar moment_name,moment_name,...
+Print data only for moments named in comma separated list.
+Each
+.Ar moment_name
+must be one of
+.Bd -literal -offset indent
+\fBDBMHC\fP \fBDBMVC\fP \fBDBZ\fP \fBDBZ1\fP \fBVEL\fP \fBZDR\fP \fBPHIDP\fP \fBRHOHV\fP \fBSTD\fP \fBSNRHC\fP \fBSNRVC\fP.
+
+.Ed
+Default is to print all moments.
+.It Fl s Ar index
+Index of first ray to write. First ray is 0.
+.It Fl c Ar count
+Number of rays to print. Default is to print all rays.
+.El
+.Sh OUTPUT FORMAT
+Default output is ASCII. For each ray, output is:
+.Bd -literal -offset indent
+  ray_header			(optional)
+  moment_name value value ...
+  moment_name value value ...
+  ...
+.Ed
+Ray header format is described in
+.Xr raxpol_ray_hdrs 1 .
+With
+.Fl b
+option, all output uses native memory encoding. Ray headers, if requested, are
+given as anonymous values in the same order as ASCII output. Then for each ray
+and moment, process prints the number of bytes in the moment name, followed by
+the moment name, followed by data values for all gates. File header provides
+the number of gates.
+.Sh ENVIRONMENT
+Non-zero
+.Ev RAXPOL_OLD_FMT
+environment variable is same as
+.Fl l .
+.Sh AUTHOR
+.An Gordon Carrie
+.Mt dev0@trekix.net

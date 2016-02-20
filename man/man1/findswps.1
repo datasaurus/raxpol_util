@@ -1,0 +1,106 @@
+.\" 
+.\" Copyright (c) 2015, Gordon D. Carrie. All rights reserved.
+.\" 
+.\" Redistribution and use in source and binary forms, with or without
+.\" modification, are permitted provided that the following conditions
+.\" are met:
+.\" 
+.\"     * Redistributions of source code must retain the above copyright
+.\"     notice, this list of conditions and the following disclaimer.
+.\"     * Redistributions in binary form must reproduce the above copyright
+.\"     notice, this list of conditions and the following disclaimer in the
+.\"     documentation and/or other materials provided with the distribution.
+.\" 
+.\" THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+.\" "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+.\" LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+.\" A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+.\" HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+.\" SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+.\" TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+.\" PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+.\" LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+.\" NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+.\" SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+.\" 
+.\" Please address questions and feedback to dev0@trekix.net
+.\"
+.Pp
+.Dd $Mdocdate$
+.Dt FINDSWPS 1
+.Os UNIX
+.Sh NAME
+.Nm findswps
+.Nd Search for sweeps in a sequence of ray angles.
+.Sh SYNOPSIS
+.Nm findswps
+.Op Fl i Ar scan_mode
+.Op Fl a Ar sweep_angle
+.Op Fl r Ar resolution
+.Op Fl n Ar min_span
+.Op Fl x Ar max_dev
+.Op Fl v
+.Sh DESCRIPTION
+.Nm findswps
+searches standard input for sweeps - rays with a common azimuth or elevation.
+Ray input consists of one text line for each ray of form
+.Bd -literal -offset indent
+Ray \fIazimuth\fR \fIelevation\fR [\fItrailing content ...\fR]
+
+.Ed
+Angles are measured in degrees. Ray azimuth and elevation are mandatory.
+Trailing content is not used, but is copied to standard output. Lines
+which do not match ray input are passed to standard output.
+For each sweep encountered, standard output will provide a line of form:
+.Bd -literal -offset indent
+Sweep \fIindex\fR \fBPPI\fR|\fBRHI\fR \fBincr\fR|\fBdecr\fR \fBEl\fR|\fBAz\fR \fIsweep_angle\fR degrees
+
+.Ed
+This will be followed by the input lines for the first and last rays of the sweep,
+prefixed with the word "Ray".
+.Sh OPTIONS
+.Bl -tag -width sweep_angle
+.It Fl i Ar scan_mode
+Specifies type of scan to look for.
+.Ar scan_mode
+can be 
+.Qq PPI ,
+.Qq RHI ,
+or
+.Qq all ,
+for plan postion indicator, range height indicator, or any scan type,
+respectively. Default is
+.Qq all .
+.It Fl a Ar sweep_angle
+Requests sweeps with fixed sweep angle of
+.Ar sweep_angle .
+If
+.Ar sweep_angle
+is
+.Qq all ,
+or no sweep angle is requested, print all sweeps.
+.It Fl r Ar resolution
+Sets angular resolution. Angles that differ by less
+than
+.Ar resolution
+degress are assumed to be the same angle.
+.It Fl n Ar min_span
+Sets minimum sweep size to
+.Ar min_span .
+Single value sets minimum span for PPI and RHI sweeps. Comma separated pair
+of values, viz.
+.Dv XX.X,YY.Y
+sets minimum spans for PPI and RHI respectively.
+.It Fl x Ar max_dev
+Sets maximum variation about fixed angle. If rays
+go beyond
+.Ar max_dev
+degrees of azimuth from a RHI azimuth, or max_dev degrees of elevation from a
+PPI elevation, the sweep is terminated and, if input continues, a new sweep is
+sought.
+.It Fl v
+print default values for options and exit
+.El
+.Sh AUTHOR
+.An Gordon Carrie
+.Mt dev0@trekix.net
